@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <title>Conkir.io</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="victoryOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="font-size:28px;font-weight:700;color:#FFD700;text-align:center;text-shadow:0 0 30px #FFD700;letter-spacing:2px" id="victoryMsg"></div>
+  <div style="display:flex;gap:12px;margin-top:8px">
+    <button onclick="document.getElementById('victoryOverlay').style.display='none'" style="padding:10px 28px;background:#2ECC71;color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px">Keep Playing</button>
+    <button onclick="location.reload()" style="padding:10px 28px;background:#4A90D9;color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px">New Game</button>
+  </div>
+</div>
+<div id="hud" style="display:none">
+  <div class="hs"><span class="hi">⚔</span><span class="hv" id="hTr">0</span><span class="hl">Troops</span></div>
+  <div class="hs"><span class="hi">💰</span><span class="hv" id="hMo">0</span><span class="hl">Money</span></div>
+  <div class="hs"><span class="hi">🏴</span><span class="hv" id="hTe">0</span><span class="hl">Territory</span></div>
+  <div class="hs"><span class="hi">📈</span><span class="hv" id="hIn">0</span><span class="hl">Income/s</span></div>
+</div>
+<div id="plist" style="display:none"></div>
+<div id="waves"></div>
+<div id="waveCounter" style="position:absolute;bottom:60px;right:12px;z-index:10;pointer-events:none"></div>
+<div id="notifCont" style="position:absolute;bottom:60px;right:12px;z-index:10;display:flex;flex-direction:column;gap:4px;max-width:320px;pointer-events:none"></div>
+<div id="ctx"></div>
+<div id="ratioBar" style="display:none;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(10,20,35,.92);border:1px solid rgba(100,160,220,.3);border-radius:8px;padding:8px 18px;z-index:10;align-items:center;gap:10px;backdrop-filter:blur(8px)">
+  <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6a8caf;white-space:nowrap">Attack Ratio</span>
+  <input type="range" id="ratioSlider" min="5" max="100" step="5" value="20" style="width:130px;accent-color:#4A90D9;cursor:pointer">
+  <span id="ratioVal" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:#7ec8e3;min-width:38px;text-align:right">20%</span>
+</div>
+<div id="menu"><div class="mc">
+  <div class="mt">CONKIR.IO</div>
+  <div class="ms">Expand. Build. Dominate.</div>
+  <div class="mr"><label>Your Name</label><input id="playerName" type="text" placeholder="Enter your name" maxlength="20" style="background:#0a1428;border:1px solid #4A90D9;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:14px;width:160px"/></div>
+  <div class="mr"><label>Difficulty</label><select id="dif"><option value="0">Easy</option><option value="1" selected>Medium</option><option value="2">Hard</option><option value="3">Impossible</option></select></div>
+  <div class="mr"><label>Bots</label><select id="bots"><option>3</option><option selected>5</option><option>7</option><option>10</option></select></div>
+  <button class="sb" id="startBtn">START SOLO</button>
+  <button class="sb" id="mpBtn" style="background:#2ECC71;margin-top:6px">MULTIPLAYER</button>
+  <div class="ci"><h3>Controls</h3>
+    <p><b>Left Click enemy/unclaimed</b> — Attack using current ratio</p>
+    <p><b>Bottom Slider</b> — Set attack % (like OpenFront's ratio slider)</p>
+    <p><b>Click + Drag</b> — Pan camera &nbsp;|&nbsp; <b>Scroll</b> — Zoom</p>
+    <p><b>Right-click own land</b> — Build (City / Factory / Port / SAM)</p>
+    <p><b>Right-click ocean</b> — Deploy Warship from nearest Port</p>
+    <p><b>Right-click enemy</b> — Diplomacy / Nuke / Naval Invasion</p>
+    <p><b>Tip:</b> Captured cities &amp; factories become yours!</p>
+  </div>
+</div></div>
+
+<!-- Multiplayer lobby overlay -->
+<div id="lobbyScreen" style="display:none;position:fixed;inset:0;background:rgba(5,12,25,0.97);z-index:200;flex-direction:column;align-items:center;justify-content:center">
+  <div style="background:#0a1428;border:1px solid rgba(74,144,217,0.4);border-radius:12px;padding:32px 36px;width:min(420px,90vw);display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:22px;font-weight:700;color:#7ec8e3;letter-spacing:2px;text-align:center">MULTIPLAYER</div>
+
+    <div class="mr"><label>Your Name</label>
+      <input id="mpName" type="text" placeholder="Enter your name" maxlength="20"
+        style="background:#0a1428;border:1px solid #4A90D9;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:14px;width:160px"/>
+    </div>
+
+    <div id="lobbyJoinSection" style="display:flex;flex-direction:column;gap:10px">
+      <button class="sb" id="createLobbyBtn" style="background:#2ECC71">CREATE ROOM</button>
+      <div style="text-align:center;color:#6a8caf;font-size:13px">— or join existing —</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="lobbyCode" type="text" placeholder="ROOM CODE" maxlength="6"
+          style="background:#0a1428;border:1px solid #4A90D9;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:14px;flex:1;text-transform:uppercase;letter-spacing:2px"/>
+        <button class="sb" id="joinLobbyBtn" style="padding:8px 16px;white-space:nowrap">JOIN</button>
+      </div>
+    </div>
+
+    <div id="waitingRoom" style="display:none;flex-direction:column;gap:10px">
+      <div style="text-align:center">
+        <div style="color:#6a8caf;font-size:11px;text-transform:uppercase;letter-spacing:1px">Room Code</div>
+        <div id="lobbyCodeDisplay" style="font-size:28px;font-weight:700;color:#FFD700;letter-spacing:4px;font-family:'Share Tech Mono',monospace"></div>
+        <div style="color:#6a8caf;font-size:11px">Share this code with friends</div>
+      </div>
+
+      <div id="waitingPlayerList" style="display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto"></div>
+
+      <div class="lobbyHostOnly" style="display:flex;flex-direction:column;gap:8px;border-top:1px solid rgba(74,144,217,0.2);padding-top:10px">
+        <div class="mr"><label>Bots</label>
+          <select id="mpBotCount">
+            <option value="0">None</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="5">5</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+        <div class="mr"><label>Difficulty</label>
+          <select id="mpDifficulty">
+            <option value="0">Easy</option>
+            <option value="1" selected>Medium</option>
+            <option value="2">Hard</option>
+            <option value="3">Impossible</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="sb" id="startMpBtn" style="display:none;background:#2ECC71">START GAME</button>
+    </div>
+
+    <div id="lobbyError" style="display:none;color:#E74C3C;font-size:13px;text-align:center"></div>
+    <button id="lobbyBackBtn" style="background:transparent;border:1px solid #4A90D9;color:#7ec8e3;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px;align-self:flex-start">← Back</button>
+  </div>
+</div>
+
+<div id="spawnScreen" style="display:none;position:absolute;inset:0;z-index:50;background:rgba(5,12,25,0.92)">
+  <canvas id="spawnCanvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+  <div style="position:absolute;top:18px;left:50%;transform:translateX(-50%);color:#e0e0e0;font-size:16px;font-weight:bold;text-shadow:0 0 8px #4A90D9;pointer-events:none;text-align:center">
+    🌍 Choose your starting location<br><span style="font-size:12px;opacity:0.7">Click a highlighted spawn point to begin</span>
+  </div>
+  <div id="spawnTimer" style="position:absolute;top:18px;right:24px;font-size:22px;font-weight:700;color:#FFD700;font-family:'Share Tech Mono',monospace;text-shadow:0 0 10px #FFD700;pointer-events:none"></div>
+</div>
+<div id="go"><h1 id="goT"></h1><p id="goP"></p><button class="sb" onclick="location.reload()">PLAY AGAIN</button></div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
