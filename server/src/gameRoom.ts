@@ -40,6 +40,7 @@ export class GameRoom {
   private spawnDeadline: number = 0;
   private prevBldHash: string = '';
   private prevDipSize: number = 0;
+  private botNames: string[] = [];
 
   constructor(code: string, hostConnId: string, hostWs: WebSocket, hostName: string, botCount: number, difficulty: number) {
     this.code = code;
@@ -151,8 +152,18 @@ export class GameRoom {
     const ownBytes = new Uint8Array(this.gs.own.buffer);
     const ownB64 = Buffer.from(ownBytes).toString('base64');
 
-    const playerNames = this.slots.map(s => s.name);
-    const playerColors = this.slots.map((_, i) => COL[i % COL.length]);
+    // Pre-generate bot names so they match what finalizeSpawns will use
+    const shuffledBotNames = [...NM].sort(() => Math.random() - 0.5);
+    this.botNames = Array.from({ length: this.botCount }, (_, i) =>
+      shuffledBotNames[i % shuffledBotNames.length] || `Bot ${i + 1}`
+    );
+
+    // Include both human and bot names/colors so the client P array covers all players
+    const playerNames = [
+      ...this.slots.map(s => s.name),
+      ...this.botNames
+    ];
+    const playerColors = playerNames.map((_, i) => COL[i % COL.length]);
 
     for (const slot of this.slots) {
       this.send(slot.ws, {
@@ -199,10 +210,6 @@ export class GameRoom {
     slot.spawnX = snapped.x;
     slot.spawnY = snapped.y;
     this.addPlayerToState(slot, snapped.x, snapped.y);
-    if (this.slots.every(s => s.spawnChosen)) {
-      if (this.spawnTimer) { clearTimeout(this.spawnTimer); this.spawnTimer = null; }
-      this.finalizeSpawns();
-    }
   }
 
   private addPlayerToState(slot: PlayerSlot, sx: number, sy: number) {
@@ -255,8 +262,7 @@ export class GameRoom {
       }
     }
 
-    // Add bots after humans
-    const shuffledNames = [...NM].sort(() => Math.random() - 0.5);
+    // Add bots after humans (use names pre-generated in startGame to match client's P array)
     const baseIndex = this.slots.length;
     const botSpawnPool = allSpawns.filter(sp =>
       usedSpots.every(u => Math.hypot(u.x - sp.x, u.y - sp.y) > 80)
@@ -268,7 +274,7 @@ export class GameRoom {
       while (this.gs.P.length <= bi) this.gs.P.push(null as any);
       this.gs.P[bi] = {
         id: bi,
-        name: shuffledNames[i % shuffledNames.length] || `Bot ${i + 1}`,
+        name: this.botNames[i] || `Bot ${i + 1}`,
         color: COL[bi % COL.length],
         troops: 50,
         maxTroops: 200,
