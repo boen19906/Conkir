@@ -1,5 +1,5 @@
 import {
-  setTer, setOwn, setP, setBld, setUnt, setMissiles, setExp, setNotifs, setDip,
+  setTer, setOwn, setP, setBld, setUnt, setMissiles, setExp, setNotifs, setDip, setWav, setTk,
   own, notifs, P, bld, exp
 } from './state';
 import { COL } from './constants';
@@ -101,6 +101,9 @@ export function applyGameStart(msg: MsgGameStarting) {
 }
 
 function applyTick(msg: MsgTick) {
+  // Sync server tick counter — drives label building, water animation, notification timers
+  setTk(msg.tk);
+
   // Apply ownership changes
   for (const [idx, owner] of msg.ownChanges) {
     own[idx] = owner;
@@ -119,6 +122,17 @@ function applyTick(msg: MsgTick) {
       p.alive = ps.alive;
     }
   }
+
+  // Apply waves (for attack/defend counters and under-attack notifications)
+  setWav(msg.waves.map(w => ({
+    id: w.id,
+    pi: w.pi,
+    troops: w.troops,
+    heap: null as any,
+    inHeap: null as any,
+    targetOwner: w.targetOwner,
+    _pressing: new Set<number>()
+  })));
 
   // Apply buildings if changed
   if (msg.bldChanged && msg.bld) {

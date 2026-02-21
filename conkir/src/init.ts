@@ -200,10 +200,9 @@ export function beginMultiplayerSpawnPhase(msg: MsgGameStarting, onSpawn: (x: nu
   const ctx2 = sc.getContext('2d') as CanvasRenderingContext2D;
   const scaleX = sc.width / W, scaleY = sc.height / H;
   let hovX = -1, hovY = -1;
-  let mySpawnChosen = false;
+  let mySpawnX = -1, mySpawnY = -1; // -1 means not yet chosen
 
   sc.onmousemove = (e) => {
-    if (mySpawnChosen) return;
     const rect = sc.getBoundingClientRect();
     const mx = ((e.clientX - rect.left) / scaleX) | 0, my = ((e.clientY - rect.top) / scaleY) | 0;
     if (B(mx, my) && isL(mx, my)) { hovX = mx; hovY = my; } else { hovX = -1; hovY = -1; }
@@ -214,7 +213,7 @@ export function beginMultiplayerSpawnPhase(msg: MsgGameStarting, onSpawn: (x: nu
     ctx2.drawImage(oc, 0, 0, sc.width, sc.height);
 
     // Hover highlight
-    if (hovX >= 0 && !mySpawnChosen) {
+    if (hovX >= 0) {
       ctx2.fillStyle = 'rgba(74,144,217,0.35)'; ctx2.fillRect(hovX * scaleX - 8, hovY * scaleY - 8, 16, 16);
       ctx2.strokeStyle = '#7ec8e3'; ctx2.lineWidth = 1.5; ctx2.strokeRect(hovX * scaleX - 8, hovY * scaleY - 8, 16, 16);
     }
@@ -239,16 +238,32 @@ export function beginMultiplayerSpawnPhase(msg: MsgGameStarting, onSpawn: (x: nu
       ctx2.fillText(sp.name.split(' ')[0], sx, sy - 11);
     }
 
-    // Timer
+    // My chosen spawn marker (pulsing blue star)
+    if (mySpawnX >= 0) {
+      const mx2 = mySpawnX * scaleX, my2 = mySpawnY * scaleY;
+      ctx2.beginPath(); ctx2.arc(mx2, my2, 10 * pulse, 0, Math.PI * 2);
+      ctx2.strokeStyle = `rgba(74,144,217,${pulse})`; ctx2.lineWidth = 2.5; ctx2.stroke();
+      ctx2.beginPath(); ctx2.arc(mx2, my2, 5, 0, Math.PI * 2);
+      ctx2.fillStyle = '#4A90D9'; ctx2.fill();
+      ctx2.strokeStyle = '#fff'; ctx2.lineWidth = 1.5; ctx2.stroke();
+      ctx2.fillStyle = '#fff'; ctx2.font = 'bold 9px monospace'; ctx2.textAlign = 'center';
+      ctx2.fillText('You', mx2, my2 - 13);
+    }
+
+    // Timer and hint
     const timerEl = document.getElementById('spawnTimer');
-    if (timerEl) timerEl.textContent = Math.ceil(_mpRemainingMs / 1000) + 's';
+    if (timerEl) {
+      const secs = Math.ceil(_mpRemainingMs / 1000);
+      timerEl.textContent = mySpawnX >= 0
+        ? `${secs}s — Click to change spawn`
+        : `${secs}s — Click to choose spawn`;
+    }
 
     if (ss.style.display !== 'none') requestAnimationFrame(drawSpawn);
   }
   drawSpawn();
 
   sc.onclick = (e) => {
-    if (mySpawnChosen) return;
     const rect = sc.getBoundingClientRect();
     const mx = ((e.clientX - rect.left) / scaleX) | 0, my = ((e.clientY - rect.top) / scaleY) | 0;
     let lx = mx, ly = my, found = false;
@@ -256,7 +271,7 @@ export function beginMultiplayerSpawnPhase(msg: MsgGameStarting, onSpawn: (x: nu
       for (let dy = -rad; dy <= rad && !found; dy++) for (let dx = -rad; dx <= rad && !found; dx++)
         if (B(mx + dx, my + dy) && isL(mx + dx, my + dy)) { lx = mx + dx; ly = my + dy; found = true; }
     if (!found) return;
-    mySpawnChosen = true;
+    mySpawnX = lx; mySpawnY = ly;
     hovX = -1; hovY = -1;
     onSpawn(lx, ly);
   };

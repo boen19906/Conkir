@@ -203,9 +203,16 @@ export class GameRoom {
   handleSpawn(connId: string, x: number, y: number) {
     if (this.phase !== 'spawning') return;
     const slot = this.slots.find(s => s.connId === connId);
-    if (!slot || slot.spawnChosen) return;
+    if (!slot) return;
     const snapped = this.snapToLand(x, y);
     if (!snapped) return;
+    // If player already chose a spawn, clear their old territory first so they can re-pick
+    if (slot.spawnChosen) {
+      const pi = slot.playerIndex;
+      for (let j = 0; j < this.gs.own.length; j++) {
+        if (this.gs.own[j] === pi) this.gs.own[j] = -2;
+      }
+    }
     slot.spawnChosen = true;
     slot.spawnX = snapped.x;
     slot.spawnY = snapped.y;
@@ -318,7 +325,8 @@ export class GameRoom {
     const dipSizeBefore = this.gs.dip.size;
     const dipHashBefore = [...this.gs.dip.entries()].map(([k, v]) => `${k}:${v}`).join(',');
 
-    this.gs.pendingNotifs = [];
+    // Do NOT clear pendingNotifs here — async callbacks (e.g. proposePeace setTimeout)
+    // may have added notifs between ticks; they'll be sent this tick then cleared after.
 
     gameTick(this.gs);
 
@@ -369,6 +377,7 @@ export class GameRoom {
       bldChanged,
       bld: bldChanged ? this.gs.bld.map(b => ({ id: b.id, type: b.type, ow: b.ow, x: b.x, y: b.y, samCd: b.samCd })) : null,
       units: this.gs.unt.map(u => ({ id: u.id, ty: u.ty, ow: u.ow, x: u.x, y: u.y, hp: u.hp })),
+      waves: this.gs.wav.map(w => ({ id: w.id, pi: w.pi, troops: w.troops, targetOwner: w.targetOwner })),
       missiles: this.gs.missiles.map(m => ({ id: m.id, pi: m.pi, type: m.type, x: m.x, y: m.y, tx: m.tx, ty: m.ty })),
       newExplosions: this.gs.exp.filter(e => e.f === 0).map(e => ({ x: e.x, y: e.y, rad: e.rad, f: e.f, mx: e.mx })),
       dipChanged,
@@ -383,6 +392,10 @@ export class GameRoom {
       const msg: MsgTick = { type: 'tick', ...baseTick, notifs: myNotifs };
       slot.ws.send(JSON.stringify(msg));
     }
+
+    // Clear pendingNotifs AFTER sending so async notifs (e.g. proposePeace setTimeout)
+    // added between ticks are captured in the next send, not wiped before it.
+    this.gs.pendingNotifs = [];
   }
 
   // ---- Action dispatch ----

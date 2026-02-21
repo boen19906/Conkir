@@ -2,7 +2,7 @@ import './style.css';
 import './input'; // registers all event listeners
 import { beginSpawnPhase, beginMultiplayerSpawnPhase, launchMultiplayerGame, updateMpSpawnInfo } from './init';
 import { W, H } from './constants';
-import { setTer, setOwn, setAtkRatio } from './state';
+import { setTer, setOwn, setAtkRatio, P } from './state';
 import { connect, send, onMsg, applyGameStart, isMultiplayer, getMyPlayerIndex } from './network';
 
 // Auto-detect WebSocket URL (localhost → dev server, else production)
@@ -37,6 +37,7 @@ document.addEventListener('input', e => {
 
 let _mpMySpawn: { x: number; y: number } | null = null;
 let _mpGameLaunched = false;
+let _mpDefeated = false;
 
 function launchMpIfReady() {
   if (!_mpGameLaunched && _mpMySpawn) {
@@ -144,6 +145,7 @@ onMsg('lobbyError', (msg) => {
 onMsg('gameStarting', (msg) => {
   _mpMySpawn = null;
   _mpGameLaunched = false;
+  _mpDefeated = false;
   applyGameStart(msg);
   (document.getElementById('lobbyScreen') as HTMLElement).style.display = 'none';
   beginMultiplayerSpawnPhase(msg, (x, y) => {
@@ -164,6 +166,16 @@ onMsg('spawnForced', (msg) => {
 // First tick signals that the spawn phase is over and the game has begun
 onMsg('tick', () => {
   launchMpIfReady();
+  // Show defeat overlay if human player just died
+  if (_mpGameLaunched && !_mpDefeated) {
+    const hi = P.findIndex(p => p.hu);
+    if (hi >= 0 && !P[hi].alive) {
+      _mpDefeated = true;
+      (document.getElementById('go') as HTMLElement).style.display = 'flex';
+      (document.getElementById('goT') as HTMLElement).textContent = '💀 DEFEATED';
+      (document.getElementById('goP') as HTMLElement).textContent = 'Your territory has been eliminated.';
+    }
+  }
 });
 
 onMsg('gameOver', (msg) => {

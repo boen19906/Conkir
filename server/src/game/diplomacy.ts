@@ -26,6 +26,8 @@ export function proposePeace(gs: GameState, from: number, to: number) {
   gs.pendingPeace.push({ from, to });
   const toP = gs.P[to];
   if (!toP || toP.hu) return;
+  // Immediate acknowledgment so the proposing player knows the request was sent
+  gs.addNotif(from, `🕊 Peace proposal sent to ${toP.name}...`, '#7ec8e3');
   const fromP = gs.P[from];
   setTimeout(() => {
     const k = getConflictKey(from, to);
@@ -75,6 +77,14 @@ export function sD(gs: GameState, a: number, b: number, s: string, skipPropose =
     const fromHu = gs.P[a]?.hu, toHu = gs.P[b]?.hu;
     if (fromHu && !toHu) { proposePeace(gs, a, b); return; }
     if (!fromHu && toHu) { proposePeace(gs, b, a); return; }
+    // Both human: instant mutual peace with notifications to both
+    if (fromHu && toHu) {
+      gs.dip.set(k, 'peace');
+      gs.conflictIntensity.set(k, 0);
+      gs.addNotif(a, `🕊 Peace established with ${gs.P[b]?.name}!`, '#2ECC71');
+      gs.addNotif(b, `🕊 ${gs.P[a]?.name} proposed peace — accepted!`, '#2ECC71');
+      return;
+    }
   }
   if (s === 'war' && gD(gs, a, b) === 'peace') {
     gs.betrayalDebuff.set(a, (gs.betrayalDebuff.get(a) || 0) + 1200);

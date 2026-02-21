@@ -181,6 +181,13 @@ export interface WireDelta_Notif {
   pi: number;
 }
 
+export interface WireDelta_Wave {
+  id: number;
+  pi: number;
+  troops: number;
+  targetOwner: number | null;
+}
+
 export interface MsgTick {
   type: 'tick';
   tk: number;
@@ -189,6 +196,7 @@ export interface MsgTick {
   bldChanged: boolean;
   bld: WireDelta_Building[] | null;
   units: WireDelta_Unit[];
+  waves: WireDelta_Wave[];
   missiles: WireDelta_Missile[];
   newExplosions: WireDelta_Explosion[];
   notifs: WireDelta_Notif[];
