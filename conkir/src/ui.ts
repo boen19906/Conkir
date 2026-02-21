@@ -1,7 +1,7 @@
 import { P, wav, notifs, botProposals, setBotProposals, underAttack, lastAttackNotif, setUnderAttack, setLastAttackNotif, tk, addNotif } from './state';
 import { DI } from './constants';
-import { sD } from './diplomacy';
-import { gD } from './diplomacy';
+import { sD, gD } from './diplomacy';
+import { isMultiplayer, send } from './network';
 
 export const ctxEl = document.getElementById('ctx') as HTMLDivElement;
 
@@ -55,41 +55,73 @@ export function updUI() {
     if (inTot > 0) wcHtml += `<div style="background:rgba(10,20,35,.88);border:1px solid #E74C3C;border-radius:5px;padding:4px 12px;font-size:12px;color:#E74C3C;margin-bottom:3px">⚠ Defending vs ${fmt(inTot)} troops</div>`;
     wc.innerHTML = wcHtml;
     const wcH = wc.offsetHeight;
-    (document.getElementById('notifCont') as HTMLElement).style.bottom = (60 + wcH + 4) + 'px';
+    (document.getElementById('notifArea') as HTMLElement).style.bottom = (60 + wcH + 4) + 'px';
   }
 
   const nc = document.getElementById('notifCont');
   if (nc) {
-    const hi2 = P.findIndex(q => q.hu);
-    // Bot peace proposals (inline, not modal)
-    let proposalHtml = '';
-    for (const prop of botProposals) {
-      const col = '#' + prop.color.toString(16).padStart(6, '0');
-      proposalHtml += `<div data-prop-from="${prop.from}" style="background:rgba(10,20,35,.95);border:1px solid #2ECC71;border-radius:5px;padding:6px 10px;font-size:12px;color:#e0e0e0;display:flex;align-items:center;gap:6px">
-        <span style="color:${col};font-weight:700">🕊 ${prop.name}</span><span style="flex:1">proposes peace</span>
-        <button data-prop-accept="${prop.from}" style="background:#2ECC71;color:#fff;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:11px">Accept</button>
-        <button data-prop-reject="${prop.from}" style="background:#E74C3C;color:#fff;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:11px">Decline</button>
-      </div>`;
-    }
     const notifHtml = notifs.slice(-4).reverse().map(n => {
       const op = Math.min(1, n.ttl / 60);
       return `<div style="background:rgba(10,20,35,.9);border:1px solid ${n.color || '#7ec8e3'};border-radius:5px;padding:5px 12px;font-size:12px;color:${n.color || '#e0e0e0'};opacity:${op.toFixed(2)}">${n.msg}</div>`;
     }).join('');
-    nc.innerHTML = proposalHtml + notifHtml;
-    // Wire Accept/Decline buttons
-    nc.querySelectorAll<HTMLButtonElement>('button[data-prop-accept]').forEach(btn => {
-      btn.onclick = () => {
-        const from = parseInt(btn.dataset.propAccept!);
-        sD(hi2, from, 'peace', true);
-        addNotif(hi2, `🕊 Peace accepted with ${P[from]?.name}!`, '#2ECC71');
+    nc.innerHTML = notifHtml;
+  }
+
+  updateProposals();
+}
+
+// Persistent event delegation for peace proposal cards — set up once
+let _proposalListenerAttached = false;
+
+function updateProposals() {
+  const pc = document.getElementById('proposalCont');
+  if (!pc) return;
+
+  // Set up delegated click handler once
+  if (!_proposalListenerAttached) {
+    _proposalListenerAttached = true;
+    pc.addEventListener('click', (e: MouseEvent) => {
+      const btn = (e.target as HTMLElement).closest('button') as HTMLButtonElement | null;
+      if (!btn) return;
+      const hi2 = P.findIndex(q => q.hu);
+      if (btn.dataset.propAccept !== undefined) {
+        const from = parseInt(btn.dataset.propAccept);
+        if (isMultiplayer()) {
+          send({ type: 'action', action: { kind: 'peaceAccept', target: from } });
+        } else {
+          sD(hi2, from, 'peace', true);
+          addNotif(hi2, `🕊 Peace accepted with ${P[from]?.name}!`, '#2ECC71');
+        }
         setBotProposals(botProposals.filter(p => p.from !== from));
-      };
-    });
-    nc.querySelectorAll<HTMLButtonElement>('button[data-prop-reject]').forEach(btn => {
-      btn.onclick = () => {
-        const from = parseInt(btn.dataset.propReject!);
+      } else if (btn.dataset.propReject !== undefined) {
+        const from = parseInt(btn.dataset.propReject);
+        if (isMultiplayer()) {
+          send({ type: 'action', action: { kind: 'peaceReject', target: from } });
+        }
         setBotProposals(botProposals.filter(p => p.from !== from));
-      };
+      }
     });
+  }
+
+  // Expire proposals older than 30 seconds
+  const now = Date.now();
+  const active = botProposals.filter(p => now - p.addedAt < 30000);
+  if (active.length !== botProposals.length) setBotProposals(active);
+
+  // Remove DOM cards for proposals no longer in state
+  pc.querySelectorAll<HTMLElement>('[data-prop-from]').forEach(card => {
+    const from = parseInt(card.dataset.propFrom!);
+    if (!botProposals.some(p => p.from === from)) pc.removeChild(card);
+  });
+
+  // Add DOM cards for new proposals
+  for (const prop of botProposals) {
+    if (pc.querySelector(`[data-prop-from="${prop.from}"]`)) continue;
+    const col = '#' + prop.color.toString(16).padStart(6, '0');
+    const card = document.createElement('div');
+    card.dataset.propFrom = String(prop.from);
+    card.style.cssText = 'background:rgba(10,20,35,.95);border:1px solid #2ECC71;border-radius:5px;padding:6px 10px;font-size:12px;color:#e0e0e0;display:flex;align-items:center;gap:6px;margin-bottom:4px';
+    card.innerHTML = `<span style="color:${col};font-weight:700">🕊 ${prop.name}</span><span style="flex:1">proposes peace</span><button data-prop-accept="${prop.from}" style="background:#2ECC71;color:#fff;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:11px">Accept</button><button data-prop-reject="${prop.from}" style="background:#E74C3C;color:#fff;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:11px">Decline</button>`;
+    pc.appendChild(card);
   }
 }

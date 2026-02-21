@@ -119,7 +119,6 @@ export function render() {
       ctx.lineTo(b.x + 2, b.y - 1); ctx.lineTo(b.x + 2, b.y - 4);
       ctx.lineTo(b.x + 4, b.y - 4); ctx.lineTo(b.x + 4, b.y + 4);
       ctx.closePath(); ctx.fill(); ctx.stroke();
-      if (zm > 1.0) { ctx.strokeStyle = c + '66'; ctx.lineWidth = 0.8; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(b.x, b.y, C.fortRange, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
     } else {
       ctx.strokeStyle = c; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2); ctx.stroke();

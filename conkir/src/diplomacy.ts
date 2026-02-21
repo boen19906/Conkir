@@ -33,7 +33,7 @@ export function proposePeace(from: number, to: number) {
   // Bot→human: show inline notification proposal (not modal)
   if (toP.hu) {
     if (!botProposals.some(p => p.from === from)) {
-      setBotProposals([...botProposals, { from, name: P[from]?.name || '?', color: P[from]?.color || 0 }]);
+      setBotProposals([...botProposals, { from, name: P[from]?.name || '?', color: P[from]?.color || 0, addedAt: Date.now() }]);
     }
     setPendingPeace(pendingPeace.filter(p => !(p.from === from && p.to === to)));
     return;

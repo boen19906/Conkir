@@ -47,8 +47,9 @@ export function gameTick() {
   for (const e of exp) e.f++;
   setExp(exp.filter(e => e.f < e.mx));
   if (tk > 50) {
+    const totalClaimed = P.reduce((s, p) => s + (p.alive ? p.territory : 0), 0) || 1;
     for (const p of P) {
-      if (!p.alive || p.territory > 0) continue;
+      if (!p.alive || p.territory / totalClaimed >= 0.0005) continue;
       p.alive = false;
       setBld(bld.filter(b => b.ow !== p.id));
       setUnt(unt.filter(u => u.ow !== p.id));

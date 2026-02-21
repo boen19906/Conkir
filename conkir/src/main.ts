@@ -266,29 +266,7 @@ onMsg('peaceProposal', (msg) => {
   if (msg.isBot) {
     // Bot proposal: inline notification card (not modal)
     if (!botProposals.some(p => p.from === msg.proposerIndex)) {
-      setBotProposals([...botProposals, { from: msg.proposerIndex, name: msg.proposerName, color: msg.proposerColor }]);
-    }
-    // Wire the accept/reject via the send mechanism (MP mode)
-    // ui.ts notifCont will render the card; override its handlers for MP
-    const nc = document.getElementById('notifCont');
-    if (nc) {
-      nc.addEventListener('click', function mpBotPropHandler(ev) {
-        const btn = (ev.target as HTMLElement).closest('button');
-        if (!btn) return;
-        const acceptFrom = btn.dataset.propAccept;
-        const rejectFrom = btn.dataset.propReject;
-        if (acceptFrom !== undefined) {
-          const fromIdx = parseInt(acceptFrom);
-          send({ type: 'action', action: { kind: 'peaceAccept', target: fromIdx } });
-          setBotProposals(botProposals.filter(p => p.from !== fromIdx));
-          nc.removeEventListener('click', mpBotPropHandler);
-        } else if (rejectFrom !== undefined) {
-          const fromIdx = parseInt(rejectFrom);
-          send({ type: 'action', action: { kind: 'peaceReject', target: fromIdx } });
-          setBotProposals(botProposals.filter(p => p.from !== fromIdx));
-          nc.removeEventListener('click', mpBotPropHandler);
-        }
-      });
+      setBotProposals([...botProposals, { from: msg.proposerIndex, name: msg.proposerName, color: msg.proposerColor, addedAt: Date.now() }]);
     }
     return;
   }

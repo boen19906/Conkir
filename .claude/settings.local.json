@@ -7,7 +7,8 @@
       "WebFetch(domain:github.com)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

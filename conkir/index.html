@@ -24,7 +24,10 @@
 <div id="plist" style="display:none"></div>
 <div id="waves"></div>
 <div id="waveCounter" style="position:absolute;bottom:60px;right:12px;z-index:10;pointer-events:none"></div>
-<div id="notifCont" style="position:absolute;bottom:60px;right:12px;z-index:10;display:flex;flex-direction:column;gap:4px;max-width:320px;pointer-events:all"></div>
+<div id="notifArea" style="position:absolute;bottom:60px;right:12px;z-index:10;display:flex;flex-direction:column;gap:4px;max-width:320px">
+  <div id="proposalCont" style="display:flex;flex-direction:column;gap:4px;pointer-events:all"></div>
+  <div id="notifCont" style="display:flex;flex-direction:column;gap:4px;pointer-events:none"></div>
+</div>
 <div id="ctx"></div>
 <div id="ratioBar" style="display:none;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(10,20,35,.92);border:1px solid rgba(100,160,220,.3);border-radius:8px;padding:8px 18px;z-index:10;align-items:center;gap:10px;backdrop-filter:blur(8px)">
   <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6a8caf;white-space:nowrap">Attack Ratio</span>

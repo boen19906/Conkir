@@ -42,8 +42,9 @@ export function gameTick(gs: GameState) {
   for (const e of gs.exp) e.f++;
   gs.exp = gs.exp.filter(e => e.f < e.mx);
   if (gs.tk > 50) {
+    const totalClaimed = gs.P.reduce((s, p) => s + (p.alive ? p.territory : 0), 0) || 1;
     for (const p of gs.P) {
-      if (!p.alive || p.territory > 0) continue;
+      if (!p.alive || p.territory / totalClaimed >= 0.0005) continue;
       p.alive = false;
       gs.bld = gs.bld.filter(b => b.ow !== p.id);
       gs.unt = gs.unt.filter(u => u.ow !== p.id);
