@@ -77,14 +77,7 @@ export function sD(gs: GameState, a: number, b: number, s: string, skipPropose =
     const fromHu = gs.P[a]?.hu, toHu = gs.P[b]?.hu;
     if (fromHu && !toHu) { proposePeace(gs, a, b); return; }
     if (!fromHu && toHu) { proposePeace(gs, b, a); return; }
-    // Both human: instant mutual peace with notifications to both
-    if (fromHu && toHu) {
-      gs.dip.set(k, 'peace');
-      gs.conflictIntensity.set(k, 0);
-      gs.addNotif(a, `🕊 Peace established with ${gs.P[b]?.name}!`, '#2ECC71');
-      gs.addNotif(b, `🕊 ${gs.P[a]?.name} proposed peace — accepted!`, '#2ECC71');
-      return;
-    }
+    // hu→hu peace: intercepted in GameRoom.handleAction before reaching here
   }
   if (s === 'war' && gD(gs, a, b) === 'peace') {
     gs.betrayalDebuff.set(a, (gs.betrayalDebuff.get(a) || 0) + 1200);

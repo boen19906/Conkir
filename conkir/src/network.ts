@@ -1,5 +1,5 @@
 import {
-  setTer, setOwn, setP, setBld, setUnt, setMissiles, setExp, setNotifs, setDip, setWav, setTk,
+  setTer, setOwn, setP, setBld, setUnt, setBullets, setMissiles, setExp, setNotifs, setDip, setWav, setTk,
   own, notifs, P, bld, exp
 } from './state';
 import { COL } from './constants';
@@ -146,6 +146,18 @@ function applyTick(msg: MsgTick) {
       samCd: b.samCd
     })));
   }
+
+  // Apply bullets (warship gunfire)
+  setBullets(msg.bullets.map(b => ({
+    x: b.x,
+    y: b.y,
+    tx: b.tx,
+    ty: b.ty,
+    tid: -1,
+    ow: b.ow,
+    spd: 4,
+    dmg: 0
+  })));
 
   // Apply units
   setUnt(msg.units.map(u => ({

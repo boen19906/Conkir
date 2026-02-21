@@ -105,6 +105,18 @@ document.getElementById('mpDifficulty')?.addEventListener('change', () => {
   send({ type: 'lobbyConfig', botCount, difficulty });
 });
 
+// Click room code to copy it
+document.getElementById('lobbyCodeDisplay')?.addEventListener('click', () => {
+  const code = (document.getElementById('lobbyCodeDisplay') as HTMLElement).textContent || '';
+  if (!code) return;
+  navigator.clipboard.writeText(code).then(() => {
+    const hint = document.getElementById('lobbyCodeCopyHint') as HTMLElement;
+    hint.textContent = '✓ Copied!';
+    hint.style.color = '#2ECC71';
+    setTimeout(() => { hint.textContent = 'Click code to copy'; hint.style.color = ''; }, 2000);
+  });
+});
+
 // ---- Server message handlers ----
 
 onMsg('lobbyCreated', () => {
@@ -129,7 +141,7 @@ onMsg('lobbyUpdate', (msg) => {
   startBtn.style.display = msg.hostIsYou ? 'block' : 'none';
 
   document.querySelectorAll<HTMLElement>('.lobbyHostOnly').forEach(el => {
-    el.style.display = msg.hostIsYou ? '' : 'none';
+    el.style.display = msg.hostIsYou ? 'flex' : 'none';
   });
 });
 
@@ -176,6 +188,26 @@ onMsg('tick', () => {
       (document.getElementById('goP') as HTMLElement).textContent = 'Your territory has been eliminated.';
     }
   }
+});
+
+onMsg('peaceProposal', (msg) => {
+  const ov = document.getElementById('peaceOverlay') as HTMLElement;
+  const msgEl = document.getElementById('peaceProposalMsg') as HTMLElement;
+  const acceptBtn = document.getElementById('peaceAcceptBtn') as HTMLButtonElement;
+  const rejectBtn = document.getElementById('peaceRejectBtn') as HTMLButtonElement;
+
+  msgEl.innerHTML = `<span style="color:#FFD700;font-weight:700">${msg.proposerName}</span> is proposing peace.<br><span style="font-size:12px;opacity:0.7">Do you accept?</span>`;
+  ov.style.display = 'flex';
+
+  const close = () => { ov.style.display = 'none'; };
+  acceptBtn.onclick = () => {
+    send({ type: 'action', action: { kind: 'peaceAccept', target: msg.proposerIndex } });
+    close();
+  };
+  rejectBtn.onclick = () => {
+    send({ type: 'action', action: { kind: 'peaceReject', target: msg.proposerIndex } });
+    close();
+  };
 });
 
 onMsg('gameOver', (msg) => {

@@ -39,7 +39,7 @@ export class GameRoom {
   private spawnBroadcastInterval: ReturnType<typeof setInterval> | null = null;
   private spawnDeadline: number = 0;
   private prevBldHash: string = '';
-  private prevDipSize: number = 0;
+  private prevDipHash: string = '';
   private botNames: string[] = [];
 
   constructor(code: string, hostConnId: string, hostWs: WebSocket, hostName: string, botCount: number, difficulty: number) {
@@ -305,8 +305,9 @@ export class GameRoom {
     // Remove any null placeholders
     this.gs.P = this.gs.P.filter(p => p !== null);
 
-    // Snapshot own for delta tracking
-    this.gs.prevOwn.set(this.gs.own);
+    // Do NOT snapshot prevOwn here — leave it at -2 (the state clients have from gameStarting).
+    // The first tick's computeOwnDelta() will then include all spawn territories as changes,
+    // so clients paint them immediately instead of showing a neutral-grey crater.
 
     this.gs.run = true;
     this.tickInterval = setInterval(() => this.tick(), 100);
@@ -320,11 +321,6 @@ export class GameRoom {
     // Run bots
     for (const bot of this.gs.bots) bot.u();
 
-    // Save state before tick for change detection
-    const bldHashBefore = this.gs.bld.map(b => `${b.id}:${b.ow}:${b.samCd ?? 0}`).join(',');
-    const dipSizeBefore = this.gs.dip.size;
-    const dipHashBefore = [...this.gs.dip.entries()].map(([k, v]) => `${k}:${v}`).join(',');
-
     // Do NOT clear pendingNotifs here — async callbacks (e.g. proposePeace setTimeout)
     // may have added notifs between ticks; they'll be sent this tick then cleared after.
 
@@ -333,13 +329,17 @@ export class GameRoom {
     // Compute own delta
     const ownChanges = this.gs.computeOwnDelta();
 
-    // Detect building changes
-    const bldHashAfter = this.gs.bld.map(b => `${b.id}:${b.ow}:${b.samCd ?? 0}`).join(',');
-    const bldChanged = bldHashAfter !== bldHashBefore;
+    // Detect building changes using persistent hash (cross-tick).
+    // handleAction calls buildB between ticks, so a within-tick before/after diff would
+    // see no change (building exists in both snapshots). prevBldHash tracks the last sent state.
+    const bldHashNow = this.gs.bld.map(b => `${b.id}:${b.ow}:${b.samCd ?? 0}`).join(',');
+    const bldChanged = bldHashNow !== this.prevBldHash;
+    if (bldChanged) this.prevBldHash = bldHashNow;
 
-    // Detect diplomacy changes
-    const dipHashAfter = [...this.gs.dip.entries()].map(([k, v]) => `${k}:${v}`).join(',');
-    const dipChanged = dipHashAfter !== dipHashBefore;
+    // Same approach for diplomacy (sD can be called from handleAction between ticks)
+    const dipHashNow = [...this.gs.dip.entries()].map(([k, v]) => `${k}:${v}`).join(',');
+    const dipChanged = dipHashNow !== this.prevDipHash;
+    if (dipChanged) this.prevDipHash = dipHashNow;
 
     // Check victory
     if (!this.gs.gOv && this.gs.tk > 50) {
@@ -378,8 +378,10 @@ export class GameRoom {
       bld: bldChanged ? this.gs.bld.map(b => ({ id: b.id, type: b.type, ow: b.ow, x: b.x, y: b.y, samCd: b.samCd })) : null,
       units: this.gs.unt.map(u => ({ id: u.id, ty: u.ty, ow: u.ow, x: u.x, y: u.y, hp: u.hp })),
       waves: this.gs.wav.map(w => ({ id: w.id, pi: w.pi, troops: w.troops, targetOwner: w.targetOwner })),
+      bullets: this.gs.bullets.map(b => ({ x: b.x, y: b.y, tx: b.tx, ty: b.ty, ow: b.ow })),
       missiles: this.gs.missiles.map(m => ({ id: m.id, pi: m.pi, type: m.type, x: m.x, y: m.y, tx: m.tx, ty: m.ty })),
-      newExplosions: this.gs.exp.filter(e => e.f === 0).map(e => ({ x: e.x, y: e.y, rad: e.rad, f: e.f, mx: e.mx })),
+      // gameTick advances all explosion frames by 1 (f:0 → f:1), so new explosions have f===1
+      newExplosions: this.gs.exp.filter(e => e.f === 1).map(e => ({ x: e.x, y: e.y, rad: e.rad, f: e.f, mx: e.mx })),
       dipChanged,
       dip: dipChanged ? [...this.gs.dip.entries()] as Array<[string, string]> : null,
     };
@@ -423,8 +425,44 @@ export class GameRoom {
           buildB(this.gs, pi, a.btype, a.x, a.y);
           break;
         case 'sD':
+          if (a.status === 'peace') {
+            const fromP2 = this.gs.P[pi];
+            const toP2 = this.gs.P[a.b];
+            if (fromP2?.hu && toP2?.hu) {
+              // hu→hu: send proposal to the target player; do not auto-accept
+              const targetSlot = this.slots.find(s => s.playerIndex === a.b);
+              if (targetSlot?.connected && targetSlot.ws.readyState === WebSocket.OPEN) {
+                this.send(targetSlot.ws, {
+                  type: 'peaceProposal',
+                  proposerIndex: pi,
+                  proposerName: fromP2.name,
+                  proposerColor: fromP2.color
+                });
+              }
+              this.gs.addNotif(pi, `🕊 Peace proposal sent to ${toP2.name}...`, '#7ec8e3');
+              return;
+            }
+          }
           sD(this.gs, pi, a.b, a.status);
           break;
+        case 'peaceAccept': {
+          const fromPA = this.gs.P[a.target]; // proposer
+          const toPA = this.gs.P[pi];         // accepter
+          if (fromPA?.alive && toPA?.alive) {
+            sD(this.gs, pi, a.target, 'peace', true);
+            this.gs.addNotif(a.target, `🕊 ${toPA.name} accepted your peace proposal!`, '#2ECC71');
+            this.gs.addNotif(pi, `🕊 Peace established with ${fromPA.name}!`, '#2ECC71');
+          }
+          break;
+        }
+        case 'peaceReject': {
+          const fromPR = this.gs.P[a.target]; // proposer
+          const toPR = this.gs.P[pi];         // rejecter
+          if (fromPR?.alive && toPR?.alive) {
+            this.gs.addNotif(a.target, `${toPR.name} rejected your peace proposal ⚔`, '#E74C3C');
+          }
+          break;
+        }
         case 'doNuke':
           doNuke(this.gs, pi, a.nukeType, a.tx, a.ty);
           break;

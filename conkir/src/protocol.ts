@@ -39,7 +39,9 @@ export interface MsgAction {
     | { kind: 'sD'; b: number; status: string }
     | { kind: 'doNuke'; nukeType: 'a' | 'h'; tx: number; ty: number }
     | { kind: 'spShip'; wx: number; wy: number }
-    | { kind: 'navInv'; tx: number; ty: number };
+    | { kind: 'navInv'; tx: number; ty: number }
+    | { kind: 'peaceAccept'; target: number }
+    | { kind: 'peaceReject'; target: number };
 }
 
 export interface MsgRatioChange {
@@ -188,6 +190,14 @@ export interface WireDelta_Wave {
   targetOwner: number | null;
 }
 
+export interface WireDelta_Bullet {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  ow: number;
+}
+
 export interface MsgTick {
   type: 'tick';
   tk: number;
@@ -197,11 +207,19 @@ export interface MsgTick {
   bld: WireDelta_Building[] | null;
   units: WireDelta_Unit[];
   waves: WireDelta_Wave[];
+  bullets: WireDelta_Bullet[];
   missiles: WireDelta_Missile[];
   newExplosions: WireDelta_Explosion[];
   notifs: WireDelta_Notif[];
   dipChanged: boolean;
   dip: Array<[string, string]> | null;
+}
+
+export interface MsgPeaceProposal {
+  type: 'peaceProposal';
+  proposerIndex: number;
+  proposerName: string;
+  proposerColor: number;
 }
 
 export interface MsgGameOver {
@@ -231,6 +249,7 @@ export type ServerMessage =
   | MsgSpawnUpdate
   | MsgSpawnForced
   | MsgTick
+  | MsgPeaceProposal
   | MsgGameOver
   | MsgPong
   | MsgError;

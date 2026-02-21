@@ -227,8 +227,9 @@ export function beginMultiplayerSpawnPhase(msg: MsgGameStarting, onSpawn: (x: nu
       ctx2.beginPath(); ctx2.arc(bx, by, 5, 0, Math.PI * 2); ctx2.fillStyle = '#E74C3C'; ctx2.fill();
     }
 
-    // Other players' chosen spawns
+    // Other players' chosen spawns (skip own — shown separately as the "You" marker)
     for (const sp of _mpChosenSpawns) {
+      if (sp.playerIndex === msg.yourPlayerIndex) continue;
       const sx = sp.x * scaleX, sy = sp.y * scaleY;
       const col = '#' + (P[sp.playerIndex]?.color ?? 0x4A90D9).toString(16).padStart(6, '0');
       ctx2.beginPath(); ctx2.arc(sx, sy, 8, 0, Math.PI * 2);
