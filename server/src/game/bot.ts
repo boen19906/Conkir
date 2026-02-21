@@ -15,6 +15,8 @@ export class Bot implements IBot {
   le: number; lb: number; ln: number; ls: number; lnv: number;
   bCache: Array<{ x: number; y: number }>;
   bTk: number;
+  // Naval follow-up: track the enemy targeted by last naval invasion
+  navTarget: { pi: number; tk: number } | null = null;
 
   constructor(gs: GameState, pi: number) {
     this.gs = gs;
@@ -91,16 +93,59 @@ export class Bot implements IBot {
 
   ex() {
     const gs = this.gs, p = gs.P[this.pi]; if (!p.alive) return;
+
+    // Reserve ratio: don't attack if we're below the minimum troop reserve
+    const minReserve = p.maxTroops * this.c.mr;
+    if (p.troops < minReserve) return;
+
     const attackersOnUs = gs.wav.filter(w => w.targetOwner === this.pi && gs.P[w.pi]?.alive && w.troops > 50);
     const isUnderPressure = attackersOnUs.length > 0;
-    let ratio = this.c.ep;
-    if (isUnderPressure) ratio = Math.min(this.c.ep * 1.8, 0.45);
-    const tr = p.troops * ratio; if (tr < 10) return;
+
+    // Troops available above reserve (cap at ep ratio for normal attacks)
+    const available = p.troops - minReserve;
+    let sendRatio = this.c.ep;
+    if (isUnderPressure) sendRatio = Math.min(this.c.ep * 1.8, 0.55);
+    const tr = available * sendRatio;
+    if (tr < 10) return;
+
+    // Priority 1: Retaliate against the strongest attacker
     if (isUnderPressure) {
       const strongest = attackersOnUs.reduce((a, b) => b.troops > a.troops ? b : a);
       const t = this.findBorderWith(strongest.pi);
       if (t) { mkWave(gs, this.pi, t.x, t.y, tr, strongest.pi); return; }
     }
+
+    // Priority 2: Follow up a naval beachhead — attack the nav target from any border we have with them
+    if (this.navTarget && gs.tk - this.navTarget.tk < 600) {
+      const enemyPi = this.navTarget.pi;
+      if (gs.P[enemyPi]?.alive && gD(gs, this.pi, enemyPi) !== 'peace') {
+        const t = this.findBorderWith(enemyPi);
+        if (t) {
+          // Send a stronger wave to capitalize on the beachhead
+          const beachheadTr = Math.min(available * Math.min(sendRatio * 1.5, 0.6), available);
+          mkWave(gs, this.pi, t.x, t.y, beachheadTr, enemyPi);
+          return;
+        }
+      } else {
+        this.navTarget = null;
+      }
+    }
+
+    // Priority 3: Attack a very weak enemy we border (< 15% of their maxTroops)
+    const veryWeak = this.findVeryWeakEnemy();
+    if (veryWeak !== null) {
+      const t = this.findBorderWith(veryWeak);
+      if (t) { mkWave(gs, this.pi, t.x, t.y, tr, veryWeak); return; }
+    }
+
+    // Priority 4: Attack a "victim" — enemy currently being gang-attacked by others
+    const victim = this.findVictim();
+    if (victim !== null) {
+      const t = this.findBorderWith(victim);
+      if (t) { mkWave(gs, this.pi, t.x, t.y, tr, victim); return; }
+    }
+
+    // Priority 5: Standard attack/expand logic
     let t: { x: number; y: number; tgt: number } | null = null;
     const roll = Math.random();
     if (roll < this.c.ag) t = this.attackEnemy();
@@ -109,11 +154,58 @@ export class Bot implements IBot {
     if (t) mkWave(gs, this.pi, t.x, t.y, tr, t.tgt);
   }
 
+  // Find the weakest bordering enemy by troops (< 15% of their maxTroops)
+  findVeryWeakEnemy(): number | null {
+    const gs = this.gs, p = gs.P[this.pi];
+    const border = this.getBorder();
+    const adj = new Map<number, number>(); // enemyPi -> their troops
+    for (const b of border) {
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nx = b.x + dx, ny = b.y + dy; if (!B(nx, ny)) continue;
+        const o = gs.own[I(nx, ny)];
+        if (o >= 0 && o !== this.pi && gs.P[o]?.alive && gD(gs, this.pi, o) !== 'peace') {
+          if (!adj.has(o)) adj.set(o, gs.P[o].troops);
+        }
+      }
+    }
+    let best: number | null = null, bestTroops = Infinity;
+    for (const [eid, troops] of adj) {
+      const enemyMaxTroops = gs.P[eid].maxTroops || 1;
+      if (troops < enemyMaxTroops * 0.15 && troops < p.troops * 1.2 && troops < bestTroops) {
+        best = eid; bestTroops = troops;
+      }
+    }
+    return best;
+  }
+
+  // Find a bordering enemy that's currently being attacked by others (good pile-on target)
+  findVictim(): number | null {
+    const gs = this.gs, p = gs.P[this.pi];
+    const border = this.getBorder();
+    const adj = new Set<number>();
+    for (const b of border) {
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nx = b.x + dx, ny = b.y + dy; if (!B(nx, ny)) continue;
+        const o = gs.own[I(nx, ny)];
+        if (o >= 0 && o !== this.pi && gs.P[o]?.alive && gD(gs, this.pi, o) !== 'peace') adj.add(o);
+      }
+    }
+    for (const eid of adj) {
+      const enemy = gs.P[eid];
+      if (enemy.troops > p.troops * 1.2) continue;
+      // Check if they're under significant attack from waves
+      const totalIncoming = gs.wav.filter(w => w.targetOwner === eid && w.pi !== this.pi).reduce((s, w) => s + w.troops, 0);
+      if (totalIncoming > enemy.troops * 0.4) return eid;
+    }
+    return null;
+  }
+
   findBorderWith(enemyPi: number) {
+    const gs = this.gs;
     for (const b of this.getBorder())
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
         const nx = b.x + dx, ny = b.y + dy;
-        if (B(nx, ny) && this.gs.own[I(nx, ny)] === enemyPi) return b;
+        if (B(nx, ny) && gs.own[I(nx, ny)] === enemyPi) return b;
       }
     return null;
   }
@@ -121,20 +213,32 @@ export class Bot implements IBot {
   attackEnemy() {
     const gs = this.gs;
     const border = this.getBorder();
-    const adj = new Map<number, { x: number; y: number; cnt: number }>();
+    const adj = new Map<number, { x: number; y: number; cnt: number; troops: number }>();
     for (const b of border) {
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
         const nx = b.x + dx, ny = b.y + dy; if (!B(nx, ny)) continue;
         const o = gs.own[I(nx, ny)];
         if (o >= 0 && o !== this.pi && gs.P[o]?.alive && gD(gs, this.pi, o) !== 'peace') {
-          if (!adj.has(o)) adj.set(o, { x: b.x, y: b.y, cnt: 0 });
+          if (!adj.has(o)) adj.set(o, { x: b.x, y: b.y, cnt: 0, troops: gs.P[o].troops });
           adj.get(o)!.cnt++;
         }
       }
     }
     if (adj.size === 0) return null;
-    let best: { x: number; y: number; tgt: number } | null = null, bestCnt = 0;
-    for (const [eid, info] of adj) if (info.cnt > bestCnt) { bestCnt = info.cnt; best = { x: info.x, y: info.y, tgt: eid }; }
+    const p = gs.P[this.pi];
+    // Pick enemy: prefer weakest among those we heavily border (> half max count),
+    // otherwise fall back to most-border (classic behavior)
+    let best: { x: number; y: number; tgt: number } | null = null;
+    let bestScore = -Infinity;
+    const maxCnt = Math.max(...Array.from(adj.values()).map(v => v.cnt));
+    for (const [eid, info] of adj) {
+      // Score: border density bonus minus troop ratio penalty
+      const borderScore = info.cnt / maxCnt;
+      const troopRatio = info.troops / (p.troops || 1);
+      // Prefer high border, low troop ratio; weight more toward border when ag is high
+      const score = borderScore * (1 + this.c.ag) - troopRatio * (1 - this.c.ag * 0.5);
+      if (score > bestScore) { bestScore = score; best = { x: info.x, y: info.y, tgt: eid }; }
+    }
     return best;
   }
 
@@ -213,13 +317,34 @@ export class Bot implements IBot {
 
   nv() {
     const gs = this.gs, p = gs.P[this.pi]; if (p.troops < 200) return;
-    for (let t = 0; t < 60; t++) {
+
+    // Build list of candidate targets: prefer enemies weaker than us on separate landmasses
+    const candidates: Array<{ x: number; y: number; pi: number; score: number }> = [];
+    for (let t = 0; t < 80; t++) {
       const x = Math.random() * W | 0, y = Math.random() * H | 0;
       if (!isL(gs, x, y)) continue;
       const o = gs.own[I(x, y)];
       if (o === this.pi) continue;
       if (o >= 0 && gD(gs, this.pi, o) === 'peace') continue;
-      if (needsNaval(gs, this.pi, x, y)) { navInv(gs, this.pi, x, y); return; }
+      if (!needsNaval(gs, this.pi, x, y)) continue;
+      // Score: prefer weaker enemies, avoid already-targeted ones
+      const enemyTroops = o >= 0 ? gs.P[o].troops : 0;
+      const isNavTarget = this.navTarget && this.navTarget.pi === o;
+      const score = (p.troops - enemyTroops) / (p.troops || 1) + (isNavTarget ? 0.3 : 0);
+      candidates.push({ x, y, pi: o, score });
+      if (candidates.length >= 5) break;
+    }
+
+    if (candidates.length === 0) return;
+
+    // Pick best candidate (highest score = weakest/preferred enemy)
+    candidates.sort((a, b) => b.score - a.score);
+    const best = candidates[0];
+    navInv(gs, this.pi, best.x, best.y);
+
+    // Track this as our active naval target for follow-up land attacks
+    if (best.pi >= 0) {
+      this.navTarget = { pi: best.pi, tk: gs.tk };
     }
   }
 }

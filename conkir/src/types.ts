@@ -109,6 +109,7 @@ export interface BotConfig {
   ec: number;
   tm: number;
   mm: number;
+  mr: number; // minimum reserve ratio (0-1): don't attack if troops < maxTroops * mr
 }
 
 export interface IBot {

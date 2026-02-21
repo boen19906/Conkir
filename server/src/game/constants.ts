@@ -16,10 +16,10 @@ export const NM = [
 export const DI = ['Easy', 'Medium', 'Hard', 'Impossible'];
 
 export const BC: BotConfig[] = [
-  { ef: 20, ep: .15, bf: 200, nf: 0,   sf: 0,   nvf: 0,   ag: .1, nk: 0, sa: 0, ec: .3, tm: 1,   mm: 1   },
-  { ef: 12, ep: .20, bf: 110, nf: 450,  sf: 380,  nvf: 320, ag: .3, nk: 1, sa: 1, ec: .5, tm: 1.1, mm: 1.1 },
-  { ef: 6,  ep: .26, bf: 65,  nf: 270,  sf: 210,  nvf: 210, ag: .5, nk: 1, sa: 1, ec: .6, tm: 1.4, mm: 1.4 },
-  { ef: 3,  ep: .32, bf: 40,  nf: 130,  sf: 130,  nvf: 110, ag: .7, nk: 1, sa: 1, ec: .7, tm: 2,   mm: 2   }
+  { ef: 20, ep: .15, bf: 200, nf: 0,   sf: 0,   nvf: 0,   ag: .1, nk: 0, sa: 0, ec: .3, tm: 1,   mm: 1,   mr: 0.10 },
+  { ef: 12, ep: .20, bf: 110, nf: 450,  sf: 380,  nvf: 320, ag: .3, nk: 1, sa: 1, ec: .5, tm: 1.1, mm: 1.1, mr: 0.15 },
+  { ef: 6,  ep: .26, bf: 65,  nf: 270,  sf: 210,  nvf: 210, ag: .5, nk: 1, sa: 1, ec: .6, tm: 1.4, mm: 1.4, mr: 0.20 },
+  { ef: 3,  ep: .32, bf: 40,  nf: 130,  sf: 130,  nvf: 110, ag: .7, nk: 1, sa: 1, ec: .7, tm: 2,   mm: 2,   mr: 0.25 }
 ];
 
 export const C = {

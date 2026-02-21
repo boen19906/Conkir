@@ -10,7 +10,7 @@ import { W, H, NM, COL, C } from './constants';
 import { own, ter } from './state';
 import { genMap, findSp, isL, B, I } from './mapgen';
 import { Bot } from './bot';
-import { render, rsz, setCam, resetRenderCache } from './render';
+import { render, rsz, setCam, setZm, resetRenderCache } from './render';
 import { gameTick } from './tick';
 import { updUI } from './ui';
 import type { MsgGameStarting, SpawnPoint } from './protocol';
@@ -152,6 +152,7 @@ export function launchGame(spawnX: number, spawnY: number) {
   const pname = (document.getElementById('playerName') as HTMLInputElement).value.trim() || 'You';
   addP(pname, spawnX, spawnY, true, df);
   setCam(spawnX, spawnY);
+  setZm(3.5);
   const newBots: Bot[] = [];
   for (let i = 0; i < bc && i < botSp.length; i++) {
     const bi = addP(sn[i], botSp[i].x, botSp[i].y, false, df);
@@ -285,7 +286,7 @@ export function launchMultiplayerGame(spawnX: number, spawnY: number) {
   (document.getElementById('hud') as HTMLElement).style.display = 'flex';
   (document.getElementById('plist') as HTMLElement).style.display = 'block';
   (document.getElementById('ratioBar') as HTMLElement).style.display = 'flex';
-  if (spawnX > 0 || spawnY > 0) setCam(spawnX, spawnY);
+  if (spawnX > 0 || spawnY > 0) { setCam(spawnX, spawnY); setZm(3.5); }
   _mpRunning = true;
   requestAnimationFrame(multiplayerLoop);
 }
