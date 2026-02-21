@@ -1,8 +1,7 @@
 import type { GameState } from './state';
 import { BC, C, W, H } from './constants';
 import { B, I, isL, isW, isCo } from './mapgen';
-import { gD } from './diplomacy';
-import { sD } from './diplomacy';
+import { gD, sD, proposePeace } from './diplomacy';
 import { mkWave } from './waves';
 import { navInv, needsNaval, spShip } from './naval';
 import { doNuke } from './nukes';
@@ -36,6 +35,22 @@ export class Bot implements IBot {
     if (c.sf > 0 && gs.tk - this.ls >= c.sf) { this.sh(); this.ls = gs.tk; }
     if (c.nvf > 0 && gs.tk - this.lnv >= c.nvf) { this.nv(); this.lnv = gs.tk; }
     if (gs.tk % 300 === 0) this.checkBetray();
+    if (gs.tk % 200 === 0) this.checkProposePeace();
+  }
+
+  checkProposePeace() {
+    const gs = this.gs, p = gs.P[this.pi];
+    for (let i = 0; i < gs.P.length; i++) {
+      if (i === this.pi || !gs.P[i].alive || gD(gs, this.pi, i) !== 'war') continue;
+      const them = gs.P[i];
+      const sharedEnemies = gs.P.filter((_, ei) => ei !== this.pi && ei !== i && gs.P[ei]?.alive && gD(gs, this.pi, ei) === 'war' && gD(gs, i, ei) === 'war').length > 0;
+      const weLosing = p.territory < them.territory * 0.5;
+      const similar = p.territory > them.territory * 0.4 && p.territory < them.territory * 2.5;
+      const proposeChance = (sharedEnemies ? 0.25 : 0) + (weLosing ? 0.30 : 0) + (similar ? 0.05 : 0);
+      if (Math.random() < proposeChance) {
+        proposePeace(gs, this.pi, i);
+      }
+    }
   }
 
   checkBetray() {

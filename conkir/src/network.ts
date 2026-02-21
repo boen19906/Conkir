@@ -1,5 +1,6 @@
 import {
   setTer, setOwn, setP, setBld, setUnt, setBullets, setMissiles, setExp, setNotifs, setDip, setWav, setTk,
+  setBotProposals, botProposals,
   own, notifs, P, bld, exp
 } from './state';
 import { COL } from './constants';

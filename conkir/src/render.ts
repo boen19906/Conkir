@@ -1,4 +1,4 @@
-import { P, own, ter, bld, unt, bullets, missiles, exp, wav, tk } from './state';
+import { P, own, ter, bld, unt, bullets, missiles, exp, wav, tk, selectedWarshipId } from './state';
 import { W, H, C } from './constants';
 import { I } from './mapgen';
 
@@ -19,6 +19,12 @@ export function rsz() { cv.width = innerWidth; cv.height = innerHeight; }
 
 export function s2m(sx: number, sy: number) {
   return { x: ((sx - cv.width / 2) / zm + camX) | 0, y: ((sy - cv.height / 2) / zm + camY) | 0 };
+}
+
+function fmtTr(n: number) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e4) return (n / 1e3).toFixed(0) + 'K';
+  return (n | 0).toString();
 }
 
 let labelCache: Array<{ id: number; name: string; color: number; x: number; y: number; ter: number }> = [];
@@ -75,6 +81,15 @@ export function render() {
     ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillText(lb.name, lb.x + 1, lb.y + 1);
     ctx.fillStyle = '#' + lb.color.toString(16).padStart(6, '0');
     ctx.fillText(lb.name, lb.x, lb.y);
+    // Troop count below name
+    const troops = P[lb.id]?.troops;
+    if (troops !== undefined) {
+      const tfs = Math.max(4, fs * 0.7);
+      ctx.font = `${tfs}px Rajdhani,sans-serif`;
+      const troopStr = fmtTr(troops) + ' ⚔';
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillText(troopStr, lb.x + 1, lb.y + fs + 1);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillText(troopStr, lb.x, lb.y + fs);
+    }
   }
   for (const b of bld) {
     const pc = P[b.ow]?.color || 0xAAAAAA;
@@ -131,6 +146,13 @@ export function render() {
     const outline = u.safe ? 'rgba(255,255,255,0.5)' : '#FFD700';
     ctx.fillStyle = pc; ctx.strokeStyle = outline; ctx.lineWidth = u.safe ? 0.5 : 1.2;
     ctx.beginPath(); ctx.moveTo(u.x, u.y - 3); ctx.lineTo(u.x + 3, u.y); ctx.lineTo(u.x, u.y + 3); ctx.lineTo(u.x - 3, u.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Selection ring for selected warship
+    if (u.id === selectedWarshipId) {
+      ctx.strokeStyle = '#00FF88'; ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 2]);
+      ctx.beginPath(); ctx.arc(u.x, u.y, 7, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
   }
   for (const m of missiles) {
     const mc = m.type === 'h' ? '#FF4500' : '#FFA500';

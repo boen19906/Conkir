@@ -395,6 +395,22 @@ export class GameRoom {
       slot.ws.send(JSON.stringify(msg));
     }
 
+    // Send any bot→human peace proposals as WS messages and clear
+    for (const prop of this.gs.pendingHumanProposals) {
+      const fromP = this.gs.P[prop.from];
+      const targetSlot = this.slots.find(s => s.playerIndex === prop.to);
+      if (fromP && targetSlot?.connected && targetSlot.ws.readyState === WebSocket.OPEN) {
+        this.send(targetSlot.ws, {
+          type: 'peaceProposal',
+          proposerIndex: prop.from,
+          proposerName: fromP.name,
+          proposerColor: fromP.color,
+          isBot: true
+        });
+      }
+    }
+    this.gs.pendingHumanProposals = [];
+
     // Clear pendingNotifs AFTER sending so async notifs (e.g. proposePeace setTimeout)
     // added between ticks are captured in the next send, not wiped before it.
     this.gs.pendingNotifs = [];
@@ -436,7 +452,8 @@ export class GameRoom {
                   type: 'peaceProposal',
                   proposerIndex: pi,
                   proposerName: fromP2.name,
-                  proposerColor: fromP2.color
+                  proposerColor: fromP2.color,
+                  isBot: false
                 });
               }
               this.gs.addNotif(pi, `🕊 Peace proposal sent to ${toP2.name}...`, '#7ec8e3');
@@ -472,6 +489,11 @@ export class GameRoom {
         case 'navInv':
           navInv(this.gs, pi, a.tx, a.ty);
           break;
+        case 'mvShip': {
+          const ship = this.gs.unt.find(u => u.id === a.uid && u.ty === 'w' && u.ow === pi);
+          if (ship) { ship.tx = a.wx; ship.ty2 = a.wy; }
+          break;
+        }
       }
     }
   }

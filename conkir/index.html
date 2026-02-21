@@ -10,7 +10,7 @@
 <canvas id="c"></canvas>
 <div id="victoryOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;flex-direction:column;align-items:center;justify-content:center;gap:16px">
   <div style="font-size:28px;font-weight:700;color:#FFD700;text-align:center;text-shadow:0 0 30px #FFD700;letter-spacing:2px" id="victoryMsg"></div>
-  <div style="display:flex;gap:12px;margin-top:8px">
+  <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;justify-content:center">
     <button onclick="document.getElementById('victoryOverlay').style.display='none'" style="padding:10px 28px;background:#2ECC71;color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px">Keep Playing</button>
     <button onclick="location.reload()" style="padding:10px 28px;background:#4A90D9;color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px">New Game</button>
   </div>
@@ -24,7 +24,7 @@
 <div id="plist" style="display:none"></div>
 <div id="waves"></div>
 <div id="waveCounter" style="position:absolute;bottom:60px;right:12px;z-index:10;pointer-events:none"></div>
-<div id="notifCont" style="position:absolute;bottom:60px;right:12px;z-index:10;display:flex;flex-direction:column;gap:4px;max-width:320px;pointer-events:none"></div>
+<div id="notifCont" style="position:absolute;bottom:60px;right:12px;z-index:10;display:flex;flex-direction:column;gap:4px;max-width:320px;pointer-events:all"></div>
 <div id="ctx"></div>
 <div id="ratioBar" style="display:none;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(10,20,35,.92);border:1px solid rgba(100,160,220,.3);border-radius:8px;padding:8px 18px;z-index:10;align-items:center;gap:10px;backdrop-filter:blur(8px)">
   <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6a8caf;white-space:nowrap">Attack Ratio</span>
@@ -34,19 +34,31 @@
 <div id="menu"><div class="mc">
   <div class="mt">CONKIR.IO</div>
   <div class="ms">Expand. Build. Dominate.</div>
-  <div class="mr"><label>Your Name</label><input id="playerName" type="text" placeholder="Enter your name" maxlength="20" style="background:#0a1428;border:1px solid #4A90D9;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:14px;width:160px"/></div>
-  <div class="mr"><label>Difficulty</label><select id="dif"><option value="0">Easy</option><option value="1" selected>Medium</option><option value="2">Hard</option><option value="3">Impossible</option></select></div>
-  <div class="mr"><label>Bots</label><select id="bots"><option>3</option><option selected>5</option><option>7</option><option>10</option></select></div>
-  <button class="sb" id="startBtn">START SOLO</button>
-  <button class="sb" id="mpBtn" style="background:#2ECC71;margin-top:6px">MULTIPLAYER</button>
-  <div class="ci"><h3>Controls</h3>
-    <p><b>Left Click enemy/unclaimed</b> — Attack using current ratio</p>
-    <p><b>Bottom Slider</b> — Set attack % (like OpenFront's ratio slider)</p>
-    <p><b>Click + Drag</b> — Pan camera &nbsp;|&nbsp; <b>Scroll</b> — Zoom</p>
-    <p><b>Right-click own land</b> — Build (City / Factory / Port / SAM)</p>
-    <p><b>Right-click ocean</b> — Deploy Warship from nearest Port</p>
-    <p><b>Right-click enemy</b> — Diplomacy / Nuke / Naval Invasion</p>
-    <p><b>Tip:</b> Captured cities &amp; factories become yours!</p>
+
+  <!-- Page 1: Home -->
+  <div id="menuHome">
+    <div class="mr"><label>Your Name</label><input id="playerName" type="text" placeholder="Enter your name" maxlength="20" style="background:#0a1428;border:1px solid #4A90D9;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:14px;width:160px"/></div>
+    <button class="sb" id="soloSetupBtn" style="margin-top:8px">PLAY SOLO</button>
+    <button class="sb" id="createLobbyMainBtn" style="background:#2ECC71;margin-top:6px">CREATE LOBBY</button>
+    <button class="sb" id="joinLobbyMainBtn" style="background:#4A90D9;margin-top:6px">JOIN LOBBY</button>
+    <div class="ci"><h3>Controls</h3>
+      <p><b>Left Click enemy/unclaimed</b> — Attack using current ratio</p>
+      <p><b>Bottom Slider</b> — Set attack % (like OpenFront's ratio slider)</p>
+      <p><b>Click + Drag</b> — Pan camera &nbsp;|&nbsp; <b>Scroll</b> — Zoom</p>
+      <p><b>Left-click own warship</b> — Select it, then click ocean to redirect</p>
+      <p><b>Right-click own land</b> — Build (City / Factory / Port / SAM)</p>
+      <p><b>Right-click ocean</b> — Deploy Warship from nearest Port</p>
+      <p><b>Right-click enemy</b> — Diplomacy / Nuke / Naval Invasion</p>
+      <p><b>Tip:</b> Captured cities &amp; factories become yours!</p>
+    </div>
+  </div>
+
+  <!-- Page 2: Solo setup -->
+  <div id="menuSoloSetup" style="display:none">
+    <div class="mr" style="margin-top:8px"><label>Difficulty</label><select id="dif"><option value="0">Easy</option><option value="1" selected>Medium</option><option value="2">Hard</option><option value="3">Impossible</option></select></div>
+    <div class="mr"><label>Bots</label><select id="bots"><option>3</option><option selected>5</option><option>7</option><option>10</option></select></div>
+    <button class="sb" id="startBtn" style="margin-top:8px">START GAME</button>
+    <button id="soloBackBtn" style="margin-top:8px;background:transparent;border:1px solid #4A90D9;color:#7ec8e3;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px">← Back</button>
   </div>
 </div></div>
 

@@ -25,7 +25,15 @@ export function proposePeace(gs: GameState, from: number, to: number) {
   if (gs.pendingPeace.some(p => p.from === from && p.to === to)) return;
   gs.pendingPeace.push({ from, to });
   const toP = gs.P[to];
-  if (!toP || toP.hu) return;
+  if (!toP) return;
+  // If the target is a human player, queue a WS proposal for gameRoom to send
+  if (toP.hu) {
+    if (!gs.pendingHumanProposals.some(p => p.from === from && p.to === to)) {
+      gs.pendingHumanProposals.push({ from, to });
+    }
+    gs.pendingPeace = gs.pendingPeace.filter(p => !(p.from === from && p.to === to));
+    return;
+  }
   // Immediate acknowledgment so the proposing player knows the request was sent
   gs.addNotif(from, `🕊 Peace proposal sent to ${toP.name}...`, '#7ec8e3');
   const fromP = gs.P[from];

@@ -13,6 +13,7 @@ export class GameState {
   wav: Wave[] = [];
   dip: Map<string, string> = new Map();
   pendingPeace: Array<{ from: number; to: number }> = [];
+  pendingHumanProposals: Array<{ from: number; to: number }> = [];
   conflictIntensity: Map<string, number> = new Map();
   betrayalDebuff: Map<number, number> = new Map();
   bots: IBot[] = [];
@@ -71,7 +72,7 @@ export class GameState {
     this.prevOwn = new Int16Array(W * H).fill(-2);
     this.P = []; this.bld = []; this.unt = []; this.exp = [];
     this.bullets = []; this.missiles = []; this.wav = [];
-    this.dip = new Map(); this.pendingPeace = [];
+    this.dip = new Map(); this.pendingPeace = []; this.pendingHumanProposals = [];
     this.conflictIntensity = new Map(); this.betrayalDebuff = new Map();
     this.bots = []; this.notifs = []; this.pendingNotifs = [];
     this.tk = 0; this.nwid = 0; this.nuid = 0; this.nbid = 0;

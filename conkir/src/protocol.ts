@@ -40,6 +40,7 @@ export interface MsgAction {
     | { kind: 'doNuke'; nukeType: 'a' | 'h'; tx: number; ty: number }
     | { kind: 'spShip'; wx: number; wy: number }
     | { kind: 'navInv'; tx: number; ty: number }
+    | { kind: 'mvShip'; uid: number; wx: number; wy: number }
     | { kind: 'peaceAccept'; target: number }
     | { kind: 'peaceReject'; target: number };
 }
@@ -220,6 +221,7 @@ export interface MsgPeaceProposal {
   proposerIndex: number;
   proposerName: string;
   proposerColor: number;
+  isBot: boolean;
 }
 
 export interface MsgGameOver {

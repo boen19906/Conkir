@@ -1,4 +1,4 @@
-import { P, own, ter, bld, atkRatio } from './state';
+import { P, own, ter, bld, unt, atkRatio, selectedWarshipId, setSelectedWarship } from './state';
 import { C, W, H } from './constants';
 import { B, I, isCo, isL } from './mapgen';
 import { gD, sD } from './diplomacy';
@@ -31,6 +31,26 @@ addEventListener('mouseup', e => {
     const { x, y } = s2m(e.clientX, e.clientY);
     const hi = P.findIndex(p => p.hu);
     if (hi >= 0 && P[hi].alive && B(x, y)) {
+      // Check if clicking on own warship — select/deselect it
+      const clickRadius = Math.max(6, 8 / zm);
+      const nearShip = unt.find(u => u.ty === 'w' && u.ow === hi && Math.hypot(u.x - x, u.y - y) < clickRadius);
+      if (nearShip) {
+        setSelectedWarship(nearShip.id === selectedWarshipId ? -1 : nearShip.id);
+        drag = false; cv.classList.remove('dragging');
+        return;
+      }
+      // If a warship is selected and clicking water, redirect it
+      if (selectedWarshipId >= 0 && ter[I(x, y)] === 0) {
+        const ship = unt.find(u => u.id === selectedWarshipId && u.ow === hi);
+        if (ship) {
+          if (isMultiplayer()) send({ type: 'action', action: { kind: 'mvShip', uid: ship.id, wx: x, wy: y } });
+          else { ship.tx = x; ship.ty2 = y; }
+          setSelectedWarship(-1);
+          drag = false; cv.classList.remove('dragging');
+          return;
+        }
+      }
+      setSelectedWarship(-1);
       const o = own[I(x, y)];
       if (o !== hi) {
         const tr = P[hi].troops * atkRatio;

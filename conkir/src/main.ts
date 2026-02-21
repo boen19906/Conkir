@@ -2,7 +2,8 @@ import './style.css';
 import './input'; // registers all event listeners
 import { beginSpawnPhase, beginMultiplayerSpawnPhase, launchMultiplayerGame, updateMpSpawnInfo } from './init';
 import { W, H } from './constants';
-import { setTer, setOwn, setAtkRatio, P } from './state';
+import { setTer, setOwn, setAtkRatio, setBotProposals, botProposals, P } from './state';
+import { sD } from './diplomacy';
 import { connect, send, onMsg, applyGameStart, isMultiplayer, getMyPlayerIndex } from './network';
 
 // Auto-detect WebSocket URL (localhost → dev server, else production)
@@ -10,7 +11,46 @@ const WS_URL = (location.hostname === 'localhost' || location.hostname === '127.
   ? 'ws://localhost:3000/ws'
   : `wss://${location.host}/ws`;
 
-// ---- Solo game ----
+// ---- Name persistence ----
+
+const STORED_NAME_KEY = 'conkir_playerName';
+
+function getStoredName(): string {
+  return localStorage.getItem(STORED_NAME_KEY) || '';
+}
+
+function saveStoredName(name: string) {
+  localStorage.setItem(STORED_NAME_KEY, name);
+}
+
+// Pre-fill name inputs from localStorage on load
+const playerNameInput = document.getElementById('playerName') as HTMLInputElement;
+const mpNameInput = document.getElementById('mpName') as HTMLInputElement;
+const storedName = getStoredName();
+if (storedName) {
+  playerNameInput.value = storedName;
+  mpNameInput.value = storedName;
+}
+
+playerNameInput.addEventListener('input', () => {
+  const v = playerNameInput.value;
+  saveStoredName(v);
+  mpNameInput.value = v;
+});
+
+// ---- Menu page navigation ----
+
+(document.getElementById('soloSetupBtn') as HTMLButtonElement).onclick = () => {
+  (document.getElementById('menuHome') as HTMLElement).style.display = 'none';
+  (document.getElementById('menuSoloSetup') as HTMLElement).style.display = 'block';
+};
+
+(document.getElementById('soloBackBtn') as HTMLButtonElement).onclick = () => {
+  (document.getElementById('menuSoloSetup') as HTMLElement).style.display = 'none';
+  (document.getElementById('menuHome') as HTMLElement).style.display = 'block';
+};
+
+// ---- Solo game start ----
 
 (document.getElementById('startBtn') as HTMLButtonElement).onclick = () => {
   const df = parseInt((document.getElementById('dif') as HTMLSelectElement).value);
@@ -48,21 +88,53 @@ function launchMpIfReady() {
 
 // ---- Lobby UI wiring ----
 
-(document.getElementById('mpBtn') as HTMLButtonElement).onclick = () => {
+// Helper: sync mpName from playerName before opening lobby
+function syncMpName() {
+  const n = playerNameInput.value.trim();
+  if (n) mpNameInput.value = n;
+}
+
+// CREATE LOBBY from main menu
+(document.getElementById('createLobbyMainBtn') as HTMLButtonElement).onclick = async () => {
+  syncMpName();
+  const name = mpNameInput.value.trim() || 'Player';
+  const botCount = parseInt((document.getElementById('mpBotCount') as HTMLSelectElement).value);
+  const difficulty = parseInt((document.getElementById('mpDifficulty') as HTMLSelectElement).value);
   (document.getElementById('lobbyScreen') as HTMLElement).style.display = 'flex';
   (document.getElementById('menu') as HTMLElement).style.display = 'none';
+  (document.getElementById('lobbyJoinSection') as HTMLElement).style.display = 'none';
+  (document.getElementById('waitingRoom') as HTMLElement).style.display = 'none';
+  clearLobbyError();
+  try {
+    await connect(WS_URL);
+    send({ type: 'lobbyCreate', playerName: name, botCount, difficulty });
+  } catch {
+    showLobbyError('Could not connect to server');
+  }
+};
+
+// JOIN LOBBY from main menu — show lobby screen with join section
+(document.getElementById('joinLobbyMainBtn') as HTMLButtonElement).onclick = () => {
+  syncMpName();
+  (document.getElementById('lobbyScreen') as HTMLElement).style.display = 'flex';
+  (document.getElementById('menu') as HTMLElement).style.display = 'none';
+  (document.getElementById('lobbyJoinSection') as HTMLElement).style.display = 'flex';
+  (document.getElementById('waitingRoom') as HTMLElement).style.display = 'none';
+  clearLobbyError();
 };
 
 (document.getElementById('lobbyBackBtn') as HTMLButtonElement).onclick = () => {
   (document.getElementById('lobbyScreen') as HTMLElement).style.display = 'none';
   (document.getElementById('menu') as HTMLElement).style.display = '';
+  (document.getElementById('menuHome') as HTMLElement).style.display = 'block';
+  (document.getElementById('menuSoloSetup') as HTMLElement).style.display = 'none';
   (document.getElementById('lobbyJoinSection') as HTMLElement).style.display = 'block';
   (document.getElementById('waitingRoom') as HTMLElement).style.display = 'none';
   clearLobbyError();
 };
 
 (document.getElementById('createLobbyBtn') as HTMLButtonElement).onclick = async () => {
-  const name = (document.getElementById('mpName') as HTMLInputElement).value.trim() || 'Player';
+  const name = mpNameInput.value.trim() || 'Player';
   const botCount = parseInt((document.getElementById('mpBotCount') as HTMLSelectElement).value);
   const difficulty = parseInt((document.getElementById('mpDifficulty') as HTMLSelectElement).value);
   clearLobbyError();
@@ -75,7 +147,7 @@ function launchMpIfReady() {
 };
 
 (document.getElementById('joinLobbyBtn') as HTMLButtonElement).onclick = async () => {
-  const name = (document.getElementById('mpName') as HTMLInputElement).value.trim() || 'Player';
+  const name = mpNameInput.value.trim() || 'Player';
   const code = (document.getElementById('lobbyCode') as HTMLInputElement).value.trim().toUpperCase();
   if (!code) { showLobbyError('Enter a room code'); return; }
   clearLobbyError();
@@ -191,6 +263,37 @@ onMsg('tick', () => {
 });
 
 onMsg('peaceProposal', (msg) => {
+  if (msg.isBot) {
+    // Bot proposal: inline notification card (not modal)
+    if (!botProposals.some(p => p.from === msg.proposerIndex)) {
+      setBotProposals([...botProposals, { from: msg.proposerIndex, name: msg.proposerName, color: msg.proposerColor }]);
+    }
+    // Wire the accept/reject via the send mechanism (MP mode)
+    // ui.ts notifCont will render the card; override its handlers for MP
+    const nc = document.getElementById('notifCont');
+    if (nc) {
+      nc.addEventListener('click', function mpBotPropHandler(ev) {
+        const btn = (ev.target as HTMLElement).closest('button');
+        if (!btn) return;
+        const acceptFrom = btn.dataset.propAccept;
+        const rejectFrom = btn.dataset.propReject;
+        if (acceptFrom !== undefined) {
+          const fromIdx = parseInt(acceptFrom);
+          send({ type: 'action', action: { kind: 'peaceAccept', target: fromIdx } });
+          setBotProposals(botProposals.filter(p => p.from !== fromIdx));
+          nc.removeEventListener('click', mpBotPropHandler);
+        } else if (rejectFrom !== undefined) {
+          const fromIdx = parseInt(rejectFrom);
+          send({ type: 'action', action: { kind: 'peaceReject', target: fromIdx } });
+          setBotProposals(botProposals.filter(p => p.from !== fromIdx));
+          nc.removeEventListener('click', mpBotPropHandler);
+        }
+      });
+    }
+    return;
+  }
+
+  // Human→human proposal: modal overlay
   const ov = document.getElementById('peaceOverlay') as HTMLElement;
   const msgEl = document.getElementById('peaceProposalMsg') as HTMLElement;
   const acceptBtn = document.getElementById('peaceAcceptBtn') as HTMLButtonElement;
@@ -211,6 +314,8 @@ onMsg('peaceProposal', (msg) => {
 });
 
 onMsg('gameOver', (msg) => {
+  // Hide defeat overlay if visible — show the victory/game over overlay instead
+  (document.getElementById('go') as HTMLElement).style.display = 'none';
   const ov = document.getElementById('victoryOverlay') as HTMLElement;
   const msgEl = document.getElementById('victoryMsg') as HTMLElement;
   const imWinner = msg.winnerId === getMyPlayerIndex();

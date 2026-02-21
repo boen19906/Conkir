@@ -1,5 +1,6 @@
-import { P, wav, notifs, underAttack, lastAttackNotif, setUnderAttack, setLastAttackNotif, tk, addNotif } from './state';
+import { P, wav, notifs, botProposals, setBotProposals, underAttack, lastAttackNotif, setUnderAttack, setLastAttackNotif, tk, addNotif } from './state';
 import { DI } from './constants';
+import { sD } from './diplomacy';
 import { gD } from './diplomacy';
 
 export const ctxEl = document.getElementById('ctx') as HTMLDivElement;
@@ -58,8 +59,37 @@ export function updUI() {
   }
 
   const nc = document.getElementById('notifCont');
-  if (nc) nc.innerHTML = notifs.slice(-4).reverse().map(n => {
-    const op = Math.min(1, n.ttl / 60);
-    return `<div style="background:rgba(10,20,35,.9);border:1px solid ${n.color || '#7ec8e3'};border-radius:5px;padding:5px 12px;font-size:12px;color:${n.color || '#e0e0e0'};opacity:${op.toFixed(2)}">${n.msg}</div>`;
-  }).join('');
+  if (nc) {
+    const hi2 = P.findIndex(q => q.hu);
+    // Bot peace proposals (inline, not modal)
+    let proposalHtml = '';
+    for (const prop of botProposals) {
+      const col = '#' + prop.color.toString(16).padStart(6, '0');
+      proposalHtml += `<div data-prop-from="${prop.from}" style="background:rgba(10,20,35,.95);border:1px solid #2ECC71;border-radius:5px;padding:6px 10px;font-size:12px;color:#e0e0e0;display:flex;align-items:center;gap:6px">
+        <span style="color:${col};font-weight:700">🕊 ${prop.name}</span><span style="flex:1">proposes peace</span>
+        <button data-prop-accept="${prop.from}" style="background:#2ECC71;color:#fff;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:11px">Accept</button>
+        <button data-prop-reject="${prop.from}" style="background:#E74C3C;color:#fff;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:11px">Decline</button>
+      </div>`;
+    }
+    const notifHtml = notifs.slice(-4).reverse().map(n => {
+      const op = Math.min(1, n.ttl / 60);
+      return `<div style="background:rgba(10,20,35,.9);border:1px solid ${n.color || '#7ec8e3'};border-radius:5px;padding:5px 12px;font-size:12px;color:${n.color || '#e0e0e0'};opacity:${op.toFixed(2)}">${n.msg}</div>`;
+    }).join('');
+    nc.innerHTML = proposalHtml + notifHtml;
+    // Wire Accept/Decline buttons
+    nc.querySelectorAll<HTMLButtonElement>('button[data-prop-accept]').forEach(btn => {
+      btn.onclick = () => {
+        const from = parseInt(btn.dataset.propAccept!);
+        sD(hi2, from, 'peace', true);
+        addNotif(hi2, `🕊 Peace accepted with ${P[from]?.name}!`, '#2ECC71');
+        setBotProposals(botProposals.filter(p => p.from !== from));
+      };
+    });
+    nc.querySelectorAll<HTMLButtonElement>('button[data-prop-reject]').forEach(btn => {
+      btn.onclick = () => {
+        const from = parseInt(btn.dataset.propReject!);
+        setBotProposals(botProposals.filter(p => p.from !== from));
+      };
+    });
+  }
 }

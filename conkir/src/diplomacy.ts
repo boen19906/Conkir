@@ -1,7 +1,7 @@
 import {
-  P, wav, dip, pendingPeace, conflictIntensity, betrayalDebuff,
+  P, wav, dip, pendingPeace, conflictIntensity, betrayalDebuff, botProposals,
   setDip, setPendingPeace, setConflictIntensity, setBetrayalDebuff,
-  addNotif
+  setBotProposals, addNotif
 } from './state';
 
 export function getConflictKey(a: number, b: number) { return a < b ? `${a}-${b}` : `${b}-${a}`; }
@@ -29,7 +29,15 @@ export function proposePeace(from: number, to: number) {
   if (pendingPeace.some(p => p.from === from && p.to === to)) return;
   pendingPeace.push({ from, to });
   const toP = P[to];
-  if (!toP || toP.hu) return;
+  if (!toP) return;
+  // Bot→human: show inline notification proposal (not modal)
+  if (toP.hu) {
+    if (!botProposals.some(p => p.from === from)) {
+      setBotProposals([...botProposals, { from, name: P[from]?.name || '?', color: P[from]?.color || 0 }]);
+    }
+    setPendingPeace(pendingPeace.filter(p => !(p.from === from && p.to === to)));
+    return;
+  }
   const fromP = P[from];
   setTimeout(() => {
     const k = getConflictKey(from, to);

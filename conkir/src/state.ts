@@ -16,6 +16,8 @@ export let conflictIntensity: Map<string, number> = new Map();
 export let betrayalDebuff: Map<number, number> = new Map();
 export let bots: IBot[] = [];
 export let notifs: Notif[] = [];
+export let botProposals: Array<{ from: number; name: string; color: number }> = [];
+export let selectedWarshipId: number = -1;
 
 export let tk: number = 0;
 export let nwid: number = 0;
@@ -46,6 +48,8 @@ export function setConflictIntensity(v: Map<string, number>) { conflictIntensity
 export function setBetrayalDebuff(v: Map<number, number>) { betrayalDebuff = v; }
 export function setBots(v: IBot[]) { bots = v; }
 export function setNotifs(v: Notif[]) { notifs = v; }
+export function setBotProposals(v: Array<{ from: number; name: string; color: number }>) { botProposals = v; }
+export function setSelectedWarship(id: number) { selectedWarshipId = id; }
 export function setTk(v: number) { tk = v; }
 export function incTk() { tk++; }
 export function setRun(v: boolean) { run = v; }
