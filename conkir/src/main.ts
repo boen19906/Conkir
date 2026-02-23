@@ -56,10 +56,15 @@ playerNameInput.addEventListener('input', () => {
   const df = parseInt((document.getElementById('dif') as HTMLSelectElement).value);
   const bc = parseInt((document.getElementById('bots') as HTMLSelectElement).value);
   const sd = Math.random() * 1e5 | 0;
-  setTer(new Uint8Array(W * H));
-  setOwn(new Int16Array(W * H).fill(-2));
-  beginSpawnPhase(sd, df, bc);
   (document.getElementById('menu') as HTMLElement).style.display = 'none';
+  (document.getElementById('loadingScreen') as HTMLElement).style.display = 'flex';
+  // Double rAF: let the browser paint the loading screen before blocking on genMap
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    setTer(new Uint8Array(W * H));
+    setOwn(new Int16Array(W * H).fill(-2));
+    beginSpawnPhase(sd, df, bc);
+    (document.getElementById('loadingScreen') as HTMLElement).style.display = 'none';
+  }));
 };
 
 // Attack ratio slider — updates local state and sends ratioChange in MP mode

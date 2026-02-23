@@ -1,5 +1,7 @@
 import { P, own, ter, bld, wav, tk, setWav, addNotif, nextWid } from './state';
 import { C, W, H } from './constants';
+
+const _encVis = new Uint8Array(W * H);
 import { B, I } from './mapgen';
 import { FlatBinaryHeap } from './heap';
 import { gD, getDefenseMultiplier, addConflict } from './diplomacy';
@@ -185,7 +187,8 @@ export function procWaves() {
   // Encirclement (every 5 ticks): flood-fill enclosed unclaimed pockets + isolated enemy tiles
   if (tk % 5 === 0) {
     // Pass 1: flood-fill enclosed unclaimed regions (fixes multi-tile craters)
-    const vis = new Uint8Array(W * H);
+    _encVis.fill(0);
+    const vis = _encVis;
     for (let s = 0; s < W * H; s++) {
       if (ter[s] === 0 || own[s] !== -1 || vis[s]) continue;
       const region: number[] = [];
