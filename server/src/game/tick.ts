@@ -17,14 +17,10 @@ export function gameTick(gs: GameState) {
     if (tks <= 1) gs.betrayalDebuff.delete(pi);
     else gs.betrayalDebuff.set(pi, tks - 1);
   }
-  // Full territory rescan every 100 ticks to correct incremental drift
-  if (gs.tk === 1 || gs.tk % 100 === 0) {
-    for (const p of gs.P) if (p.alive) p.territory = cntT(gs, p.id);
-  }
-  // Growth/income/maxTroops every 10 ticks using incrementally-tracked territory
   if (gs.tk === 1 || gs.tk % 10 === 0) {
     for (const p of gs.P) {
       if (!p.alive) continue;
+      p.territory = cntT(gs, p.id);
       const ci = gs.bld.filter(b => b.ow === p.id && b.type === 'city');
       p.maxTroops = p.territory * C.mtT + ci.length * C.ciB;
       p.troops = Math.min(p.troops, p.maxTroops);
@@ -38,6 +34,7 @@ export function gameTick(gs: GameState) {
       p.money += p.income;
     }
   }
+  if (gs.tk % 5 === 0 && gs.tk % 10 !== 0) for (const p of gs.P) if (p.alive) p.territory = cntT(gs, p.id);
   spawnTradeShips(gs);
   updTradeShips(gs);
   updUnits(gs);

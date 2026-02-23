@@ -75,9 +75,9 @@ export class Bot implements IBot {
 
   getBorder() {
     const gs = this.gs;
-    if (gs.tk - this.bTk < 30 && this.bCache.length > 0) return this.bCache;
+    if (gs.tk - this.bTk < 15 && this.bCache.length > 0) return this.bCache;
     const b: Array<{ x: number; y: number }> = [];
-    for (let y = 0; y < H; y += 3) for (let x = 0; x < W; x += 3) {
+    for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) {
       if (gs.own[I(x, y)] !== this.pi) continue;
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
         const nx = x + dx, ny = y + dy;
@@ -118,7 +118,7 @@ export class Bot implements IBot {
     // Troops available above reserve (cap at ep ratio for normal attacks)
     const available = p.troops - minReserve;
     let sendRatio = this.c.ep;
-    if (inEngagement) sendRatio = Math.min(this.c.ep * 1.8, 0.65);
+    if (inEngagement) sendRatio = Math.min(this.c.ep * 1.8, 0.55);
     const tr = available * sendRatio;
     if (tr < 10) return;
 
@@ -185,7 +185,7 @@ export class Bot implements IBot {
     let best: number | null = null, bestTroops = Infinity;
     for (const [eid, troops] of adj) {
       const enemyMaxTroops = gs.P[eid].maxTroops || 1;
-      if (troops < enemyMaxTroops * 0.20 && troops < p.troops * 1.2 && troops < bestTroops) {
+      if (troops < enemyMaxTroops * 0.15 && troops < p.troops * 1.2 && troops < bestTroops) {
         best = eid; bestTroops = troops;
       }
     }
@@ -209,7 +209,7 @@ export class Bot implements IBot {
       if (enemy.troops > p.troops * 1.2) continue;
       // Check if they're under significant attack from waves
       const totalIncoming = gs.wav.filter(w => w.targetOwner === eid && w.pi !== this.pi).reduce((s, w) => s + w.troops, 0);
-      if (totalIncoming > enemy.troops * 0.3) return eid;
+      if (totalIncoming > enemy.troops * 0.4) return eid;
     }
     return null;
   }

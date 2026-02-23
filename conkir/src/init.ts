@@ -28,7 +28,7 @@ let acc = 0, lt = 0;
 
 // ---- Multiplayer spawn state (updated by main.ts via updateMpSpawnInfo) ----
 let _mpChosenSpawns: SpawnPoint[] = [];
-let _mpRemainingMs = 12000;
+let _mpRemainingMs = 30000;
 
 export function updateMpSpawnInfo(spawns: SpawnPoint[], remainingMs: number) {
   _mpChosenSpawns = spawns;
@@ -155,7 +155,7 @@ export function launchGame(spawnX: number, spawnY: number) {
   setZm(3.5);
   const newBots: Bot[] = [];
   for (let i = 0; i < bc && i < botSp.length; i++) {
-    const bi = addP(sn[i % sn.length], botSp[i].x, botSp[i].y, false, df);
+    const bi = addP(sn[i], botSp[i].x, botSp[i].y, false, df);
     newBots.push(new Bot(bi));
   }
   setBots(newBots);

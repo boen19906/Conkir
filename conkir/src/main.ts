@@ -58,7 +58,6 @@ playerNameInput.addEventListener('input', () => {
   const sd = Math.random() * 1e5 | 0;
   (document.getElementById('menu') as HTMLElement).style.display = 'none';
   (document.getElementById('loadingScreen') as HTMLElement).style.display = 'flex';
-  // Double rAF: let the browser paint the loading screen before blocking on genMap
   requestAnimationFrame(() => requestAnimationFrame(() => {
     setTer(new Uint8Array(W * H));
     setOwn(new Int16Array(W * H).fill(-2));

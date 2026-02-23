@@ -44,18 +44,18 @@ function fN(w: number, h: number, r: RNG, oc = 5, bs = 60) {
 export function genMap(gs: GameState, s: number) {
   const r = new RNG(s);
   const cs = [
-    { cx: .18, cy: .3,  rx: .12, ry: .25, rt: .2 },
-    { cx: .22, cy: .6,  rx: .1,  ry: .18, rt: -.1 },
-    { cx: .45, cy: .28, rx: .1,  ry: .15, rt: .1 },
+    { cx: .18, cy: .3, rx: .12, ry: .25, rt: .2 },
+    { cx: .22, cy: .6, rx: .1, ry: .18, rt: -.1 },
+    { cx: .45, cy: .28, rx: .1, ry: .15, rt: .1 },
     { cx: .47, cy: .55, rx: .12, ry: .22, rt: 0 },
-    { cx: .7,  cy: .3,  rx: .15, ry: .2,  rt: -.15 },
+    { cx: .7, cy: .3, rx: .15, ry: .2, rt: -.15 },
     { cx: .72, cy: .55, rx: .08, ry: .12, rt: .1 },
-    { cx: .85, cy: .5,  rx: .05, ry: .08, rt: .3 },
-    { cx: .35, cy: .8,  rx: .07, ry: .06, rt: 0 },
-    { cx: .5,  cy: .1,  rx: .2,  ry: .06, rt: .05 },
+    { cx: .85, cy: .5, rx: .05, ry: .08, rt: .3 },
+    { cx: .35, cy: .8, rx: .07, ry: .06, rt: 0 },
+    { cx: .5, cy: .1, rx: .2, ry: .06, rt: .05 },
     { cx: .55, cy: .42, rx: .03, ry: .04, rt: 0 },
     { cx: .32, cy: .45, rx: .03, ry: .03, rt: 0 },
-    { cx: .9,  cy: .35, rx: .03, ry: .05, rt: .2 },
+    { cx: .9, cy: .35, rx: .03, ry: .05, rt: .2 }
   ];
   const m = new Float32Array(W * H);
   for (const c of cs) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
