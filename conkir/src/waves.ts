@@ -37,7 +37,7 @@ export function mkWave(pi: number, cx: number, cy: number, tr: number, targetOwn
 
   const heap = new FlatBinaryHeap();
   const inHeap = new Set<number>();
-  const sr = 60;
+  const sr = 150;
   for (let y = Math.max(0, cy - sr); y < Math.min(H, cy + sr); y++)
     for (let x = Math.max(0, cx - sr); x < Math.min(W, cx + sr); x++) {
       if (own[I(x, y)] !== pi) continue;
