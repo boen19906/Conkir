@@ -11,8 +11,11 @@ function openFrontPriority(ni: number, pi: number, tickNow: number) {
     const nx = x + dx, ny = y + dy;
     if (B(nx, ny) && own[I(nx, ny)] === pi) numOwnedByMe++;
   }
-  const noise = (Math.random() * 8) | 0;
-  return (noise + 10) * (1 - numOwnedByMe * 0.5) + tickNow;
+  // Strongly prefer enclosed/surrounded tiles (prevents speckles).
+  // Each additional owned neighbor drops priority by 8 units, guaranteeing enclosed
+  // tiles are always processed before frontier tiles regardless of tick ordering.
+  // Tiny noise (0-1) keeps borders visually natural.
+  return tickNow - numOwnedByMe * 8 + Math.random();
 }
 
 export function waveCanClaim(pi: number, tileOwner: number, targetOwner: number | null) {
@@ -174,6 +177,33 @@ export function procWaves() {
     if (w.troops <= 0 || w.heap.size() === 0) {
       if (w.troops > 0 && P[w.pi]?.alive) P[w.pi].troops += w.troops;
       wav.splice(wi, 1);
+    }
+  }
+
+  // Encirclement sweep: claim any land tile whose every land neighbor belongs to the
+  // same single player (unclaimed pockets and tiny isolated enemy tiles left by waves).
+  for (let i = 0; i < W * H; i++) {
+    if (ter[i] === 0) continue;        // water
+    const o = own[i];
+    let captor = -99, landCount = 0, allSame = true;
+    const x = i % W, y = (i / W) | 0;
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (!B(nx, ny)) continue;
+      const nni = I(nx, ny);
+      if (ter[nni] === 0) continue;    // water neighbor doesn't count
+      landCount++;
+      const no = own[nni];
+      if (no < 0) { allSame = false; break; }       // unclaimed neighbor → not enclosed
+      if (captor === -99) captor = no;
+      else if (no !== captor) { allSame = false; break; }
+    }
+    if (!allSame || captor < 0 || captor === o || landCount < 2) continue;
+    // Tile is completely surrounded by one player — claim it
+    if (o === -1) {
+      own[i] = captor;                 // unclaimed pocket: free claim
+    } else if (o >= 0 && gD(captor, o) !== 'peace') {
+      own[i] = captor;                 // isolated enemy tile: siege capture
     }
   }
 }
