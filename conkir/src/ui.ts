@@ -1,4 +1,4 @@
-import { P, wav, notifs, botProposals, setBotProposals, underAttack, waveNotifTicks, setUnderAttack, tk, addNotif } from './state';
+import { P, wav, notifs, botProposals, setBotProposals, underAttack, attackerNotifTicks, setUnderAttack, tk, addNotif } from './state';
 import { DI } from './constants';
 import { sD, gD } from './diplomacy';
 import { isMultiplayer, send } from './network';
@@ -40,18 +40,22 @@ export function updUI() {
   const wasUnderAttack = underAttack;
   setUnderAttack(wIncoming.length > 0);
 
-  // Clean up entries for waves that no longer exist
-  const incomingIds = new Set(wIncoming.map(w => w.id));
-  for (const id of waveNotifTicks.keys()) {
-    if (!incomingIds.has(id)) waveNotifTicks.delete(id);
+  // Group incoming waves by attacker — multiple disconnected fronts from the same player combine,
+  // but different attackers each get their own notification
+  const byAttacker = new Map<number, number>(); // pi → total troops
+  for (const w of wIncoming) byAttacker.set(w.pi, (byAttacker.get(w.pi) ?? 0) + w.troops);
+
+  // Clean up attackers who are no longer pressing us
+  for (const pi of attackerNotifTicks.keys()) {
+    if (!byAttacker.has(pi)) attackerNotifTicks.delete(pi);
   }
-  // Notify per distinct incoming wave — each Wave object is already a separate disconnected front
-  // (the server merges touching/adjacent waves, so separate objects = separate fronts)
-  for (const w of wIncoming) {
-    const lastNotif = waveNotifTicks.get(w.id) ?? -1;
+  // One notification per attacker, throttled independently
+  for (const [pi, troops] of byAttacker) {
+    const lastNotif = attackerNotifTicks.get(pi) ?? -1;
     if (lastNotif < 0 || tk - lastNotif >= 100) {
-      waveNotifTicks.set(w.id, tk);
-      addNotif(hi, `⚠ Under attack: ${fmt(w.troops)} troops incoming!`, '#E74C3C');
+      attackerNotifTicks.set(pi, tk);
+      const name = P[pi]?.name ?? 'Enemy';
+      addNotif(hi, `⚠ ${name} attacking: ${fmt(Math.round(troops))} troops!`, '#E74C3C');
     }
   }
 
@@ -59,10 +63,12 @@ export function updUI() {
   const wc = document.getElementById('waveCounter');
   if (wc) {
     const outTot = Math.round(mw.reduce((s, w) => s + w.troops, 0));
-    const inTot = Math.round(wIncoming.reduce((s, w) => s + w.troops, 0));
     let wcHtml = '';
     if (outTot > 0) wcHtml += `<div style="background:rgba(10,20,35,.88);border:1px solid #4A90D9;border-radius:5px;padding:4px 12px;font-size:12px;color:#4A90D9;margin-bottom:3px">⚔ Attacking: ${fmt(outTot)} troops</div>`;
-    if (inTot > 0) wcHtml += `<div style="background:rgba(10,20,35,.88);border:1px solid #E74C3C;border-radius:5px;padding:4px 12px;font-size:12px;color:#E74C3C;margin-bottom:3px">⚠ Defending vs ${fmt(inTot)} troops</div>`;
+    for (const [pi, troops] of byAttacker) {
+      const name = P[pi]?.name ?? 'Enemy';
+      wcHtml += `<div style="background:rgba(10,20,35,.88);border:1px solid #E74C3C;border-radius:5px;padding:4px 12px;font-size:12px;color:#E74C3C;margin-bottom:3px">⚠ ${name}: ${fmt(Math.round(troops))} troops</div>`;
+    }
     wc.innerHTML = wcHtml;
     const wcH = wc.offsetHeight;
     (document.getElementById('notifArea') as HTMLElement).style.bottom = (60 + wcH + 4) + 'px';
