@@ -150,7 +150,11 @@ export function procWaves(gs: GameState) {
 
       const prevOwner = tileOwner;
       gs.own[ni] = w.pi;
-      if (prevOwner >= 0) addConflict(gs, prevOwner, w.pi, 1);
+      if (prevOwner >= 0) {
+        addConflict(gs, prevOwner, w.pi, 1);
+        if (gs.P[prevOwner]?.alive) gs.P[prevOwner].territory = Math.max(0, gs.P[prevOwner].territory - 1);
+      }
+      if (gs.P[w.pi]?.alive) gs.P[w.pi].territory++;
 
       for (const b of gs.bld) {
         if (b.x !== tx || b.y !== ty) continue;
@@ -180,30 +184,61 @@ export function procWaves(gs: GameState) {
     }
   }
 
-  // Encirclement sweep: claim any land tile whose every land neighbor belongs to the
-  // same single player (unclaimed pockets and tiny isolated enemy tiles left by waves).
-  for (let i = 0; i < W * H; i++) {
-    if (gs.ter[i] === 0) continue;       // water
-    const o = gs.own[i];
-    let captor = -99, landCount = 0, allSame = true;
-    const x = i % W, y = (i / W) | 0;
-    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-      const nx = x + dx, ny = y + dy;
-      if (!B(nx, ny)) continue;
-      const nni = I(nx, ny);
-      if (gs.ter[nni] === 0) continue;   // water neighbor doesn't count
-      landCount++;
-      const no = gs.own[nni];
-      if (no < 0) { allSame = false; break; }       // unclaimed neighbor → not enclosed
-      if (captor === -99) captor = no;
-      else if (no !== captor) { allSame = false; break; }
+  // Encirclement (every 5 ticks): flood-fill enclosed unclaimed pockets + isolated enemy tiles
+  if (gs.tk % 5 === 0) {
+    // Pass 1: flood-fill enclosed unclaimed regions (fixes multi-tile craters)
+    const vis = new Uint8Array(W * H);
+    for (let s = 0; s < W * H; s++) {
+      if (gs.ter[s] === 0 || gs.own[s] !== -1 || vis[s]) continue;
+      const region: number[] = [];
+      const q: number[] = [s];
+      vis[s] = 1;
+      let captor = -1, enclosed = true;
+      outer: while (q.length) {
+        const ci = q.pop()!;
+        region.push(ci);
+        if (region.length > 60) { enclosed = false; break; }
+        const cx = ci % W, cy = (ci / W) | 0;
+        for (const [ddx, ddy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+          const nnx = cx + ddx, nny = cy + ddy;
+          if (!B(nnx, nny)) { enclosed = false; break outer; }
+          const nni = I(nnx, nny);
+          if (gs.ter[nni] === 0) continue;
+          const no = gs.own[nni];
+          if (no === -1) { if (!vis[nni]) { vis[nni] = 1; q.push(nni); } }
+          else if (no >= 0) {
+            if (captor < 0) captor = no;
+            else if (captor !== no) { enclosed = false; break outer; }
+          }
+        }
+      }
+      if (enclosed && captor >= 0 && region.length > 0) {
+        for (const ri of region) { gs.own[ri] = captor; if (gs.P[captor]?.alive) gs.P[captor].territory++; }
+      }
     }
-    if (!allSame || captor < 0 || captor === o || landCount < 2) continue;
-    // Tile is completely surrounded by one player — claim it
-    if (o === -1) {
-      gs.own[i] = captor;               // unclaimed pocket: free claim
-    } else if (o >= 0 && gD(gs, captor, o) !== 'peace') {
-      gs.own[i] = captor;               // isolated enemy tile: siege capture
+    // Pass 2: isolated enemy tiles fully surrounded by one player
+    for (let i = 0; i < W * H; i++) {
+      if (gs.ter[i] === 0 || gs.own[i] < 0) continue;
+      const o = gs.own[i];
+      let captor = -99, landCount = 0, allSame = true;
+      const x = i % W, y = (i / W) | 0;
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (!B(nx, ny)) continue;
+        const nni = I(nx, ny);
+        if (gs.ter[nni] === 0) continue;
+        landCount++;
+        const no = gs.own[nni];
+        if (no < 0) { allSame = false; break; }
+        if (captor === -99) captor = no;
+        else if (no !== captor) { allSame = false; break; }
+      }
+      if (!allSame || captor < 0 || captor === o || landCount < 2) continue;
+      if (gD(gs, captor, o) !== 'peace') {
+        gs.own[i] = captor;
+        if (gs.P[o]?.alive) gs.P[o].territory = Math.max(0, gs.P[o].territory - 1);
+        if (gs.P[captor]?.alive) gs.P[captor].territory++;
+      }
     }
   }
 }

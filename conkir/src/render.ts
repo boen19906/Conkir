@@ -10,10 +10,11 @@ const oX = oC.getContext('2d') as CanvasRenderingContext2D;
 
 export let camX = W / 2, camY = H / 2, zm = 1.5;
 let mImg: ImageData | null = null;
+let lastRenderTk = -1;
 
 export function setCam(x: number, y: number) { camX = x; camY = y; }
 export function setZm(z: number) { zm = z; }
-export function resetRenderCache() { mImg = null; labelTk = -1; labelCache = []; }
+export function resetRenderCache() { mImg = null; lastRenderTk = -1; labelTk = -1; labelCache = []; }
 
 export function rsz() { cv.width = innerWidth; cv.height = innerHeight; }
 
@@ -42,30 +43,33 @@ function buildLabels() {
 }
 
 export function render() {
-  if (!mImg) mImg = oX.createImageData(W, H);
-  const d = mImg.data;
-  for (let i = 0; i < W * H; i++) {
-    const pp = i * 4, o = own[i], t = ter[i];
-    let r: number, g: number, b: number;
-    if (t === 0) {
-      const x = i % W, y = (i / W) | 0, v = Math.sin(x * .05 + tk * .02) * 4 + Math.sin(y * .03) * 3;
-      r = 26 + v; g = 58 + v; b = 92 + v * 2;
-    } else if (o >= 0 && o < P.length) {
-      const c = P[o].color; r = (c >> 16) & 255; g = (c >> 8) & 255; b = c & 255;
-      if (t === 2) { r = r * .7 | 0; g = g * .7 | 0; b = b * .7 | 0; }
-      else if (t === 3) { r = r * .85 | 0; g = g * .9 | 0; b = b * .8 | 0; }
-      const x = i % W, y = (i / W) | 0;
-      if ((x > 0 && own[i - 1] !== o) || (x < W - 1 && own[i + 1] !== o) || (y > 0 && own[i - W] !== o) || (y < H - 1 && own[i + W] !== o)) {
-        r = r * .6 | 0; g = g * .6 | 0; b = b * .6 | 0;
+  if (tk !== lastRenderTk) {
+    if (!mImg) mImg = oX.createImageData(W, H);
+    const d = mImg.data;
+    for (let i = 0; i < W * H; i++) {
+      const pp = i * 4, o = own[i], t = ter[i];
+      let r: number, g: number, b: number;
+      if (t === 0) {
+        const x = i % W, y = (i / W) | 0, v = Math.sin(x * .05 + tk * .02) * 4 + Math.sin(y * .03) * 3;
+        r = 26 + v; g = 58 + v; b = 92 + v * 2;
+      } else if (o >= 0 && o < P.length) {
+        const c = P[o].color; r = (c >> 16) & 255; g = (c >> 8) & 255; b = c & 255;
+        if (t === 2) { r = r * .7 | 0; g = g * .7 | 0; b = b * .7 | 0; }
+        else if (t === 3) { r = r * .85 | 0; g = g * .9 | 0; b = b * .8 | 0; }
+        const x = i % W, y = (i / W) | 0;
+        if ((x > 0 && own[i - 1] !== o) || (x < W - 1 && own[i + 1] !== o) || (y > 0 && own[i - W] !== o) || (y < H - 1 && own[i + W] !== o)) {
+          r = r * .6 | 0; g = g * .6 | 0; b = b * .6 | 0;
+        }
+      } else {
+        r = t === 2 ? 107 : t === 3 ? 45 : 61;
+        g = t === 2 ? 107 : t === 3 ? 74 : 92;
+        b = t === 2 ? 107 : t === 3 ? 45 : 58;
       }
-    } else {
-      r = t === 2 ? 107 : t === 3 ? 45 : 61;
-      g = t === 2 ? 107 : t === 3 ? 74 : 92;
-      b = t === 2 ? 107 : t === 3 ? 45 : 58;
+      d[pp] = r; d[pp + 1] = g; d[pp + 2] = b; d[pp + 3] = 255;
     }
-    d[pp] = r; d[pp + 1] = g; d[pp + 2] = b; d[pp + 3] = 255;
+    oX.putImageData(mImg, 0, 0);
+    lastRenderTk = tk;
   }
-  oX.putImageData(mImg, 0, 0);
   ctx.fillStyle = '#0d1b2a'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.save();
   ctx.translate(cv.width / 2 - camX * zm, cv.height / 2 - camY * zm);

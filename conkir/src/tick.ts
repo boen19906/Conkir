@@ -22,10 +22,10 @@ export function gameTick() {
     if (tks <= 1) betrayalDebuff.delete(pi);
     else betrayalDebuff.set(pi, tks - 1);
   }
-  if (tk === 1 || tk % 10 === 0) {
+  if (tk === 1 || tk % 50 === 0) {
     for (const p of P) {
       if (!p.alive) continue;
-      p.territory = cntT(p.id);
+      p.territory = cntT(p.id); // periodic correction; incremental tracking in waves.ts handles per-tick accuracy
       const ci = bld.filter(b => b.ow === p.id && b.type === 'city');
       p.maxTroops = p.territory * C.mtT + ci.length * C.ciB;
       p.troops = Math.min(p.troops, p.maxTroops);
@@ -39,7 +39,6 @@ export function gameTick() {
       p.money += p.income;
     }
   }
-  if (tk % 5 === 0 && tk % 10 !== 0) for (const p of P) if (p.alive) p.territory = cntT(p.id);
   spawnTradeShips();
   updTradeShips();
   updUnits();

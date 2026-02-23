@@ -175,12 +175,12 @@ export class GameRoom {
         playerNames,
         playerColors,
         botSpawns: botSpawns.slice(0, this.botCount),
-        spawnTimeoutMs: 30000
+        spawnTimeoutMs: 12000
       });
     }
 
-    this.spawnDeadline = Date.now() + 30000;
-    this.spawnTimer = setTimeout(() => this.finalizeSpawns(), 30000);
+    this.spawnDeadline = Date.now() + 12000;
+    this.spawnTimer = setTimeout(() => this.finalizeSpawns(), 12000);
 
     this.spawnBroadcastInterval = setInterval(() => {
       if (this.phase !== 'spawning') {
