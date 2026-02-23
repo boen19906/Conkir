@@ -30,7 +30,6 @@ export let run: boolean = false;
 export let gOv: boolean = false;
 export let victoryShown: boolean = false;
 export let underAttack: boolean = false;
-export let attackerNotifTicks: Map<number, number> = new Map(); // attacker pi → last tick notified
 
 // Setters for reassigned bindings
 export function setTer(v: Uint8Array) { ter = v; }

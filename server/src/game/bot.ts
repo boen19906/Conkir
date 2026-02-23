@@ -17,6 +17,8 @@ export class Bot implements IBot {
   bTk: number;
   // Naval follow-up: track the enemy targeted by last naval invasion
   navTarget: { pi: number; tk: number } | null = null;
+  // Retaliation delay: tick when we first came under attack (react after c.ef*3 ticks)
+  attackedSince: number = -1;
 
   constructor(gs: GameState, pi: number) {
     this.gs = gs;
@@ -101,15 +103,24 @@ export class Bot implements IBot {
     const attackersOnUs = gs.wav.filter(w => w.targetOwner === this.pi && gs.P[w.pi]?.alive && w.troops > 50);
     const isUnderPressure = attackersOnUs.length > 0;
 
+    // Track how long we've been under attack; only retaliate after a reaction delay
+    // (c.ef * 3 ticks: 60t easy → 36t medium → 18t hard → 9t impossible)
+    if (isUnderPressure) {
+      if (this.attackedSince < 0) this.attackedSince = gs.tk;
+    } else {
+      this.attackedSince = -1;
+    }
+    const canRetaliate = isUnderPressure && gs.tk - this.attackedSince >= this.c.ef * 3;
+
     // Troops available above reserve (cap at ep ratio for normal attacks)
     const available = p.troops - minReserve;
     let sendRatio = this.c.ep;
-    if (isUnderPressure) sendRatio = Math.min(this.c.ep * 1.8, 0.55);
+    if (canRetaliate) sendRatio = Math.min(this.c.ep * 1.8, 0.55);
     const tr = available * sendRatio;
     if (tr < 10) return;
 
-    // Priority 1: Retaliate against the strongest attacker
-    if (isUnderPressure) {
+    // Priority 1: Retaliate against the strongest attacker (after reaction delay)
+    if (canRetaliate) {
       const strongest = attackersOnUs.reduce((a, b) => b.troops > a.troops ? b : a);
       const t = this.findBorderWith(strongest.pi);
       if (t) { mkWave(gs, this.pi, t.x, t.y, tr, strongest.pi); return; }

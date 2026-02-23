@@ -1,4 +1,4 @@
-import { P, wav, notifs, botProposals, setBotProposals, underAttack, attackerNotifTicks, setUnderAttack, tk, addNotif } from './state';
+import { P, wav, notifs, botProposals, setBotProposals, underAttack, setUnderAttack, addNotif } from './state';
 import { DI } from './constants';
 import { sD, gD } from './diplomacy';
 import { isMultiplayer, send } from './network';
@@ -37,27 +37,11 @@ export function updUI() {
 
   const mw = wav.filter(w => w.pi === hi);
   const wIncoming = wav.filter(w => w.targetOwner === hi && w.troops > 50);
-  const wasUnderAttack = underAttack;
   setUnderAttack(wIncoming.length > 0);
 
-  // Group incoming waves by attacker — multiple disconnected fronts from the same player combine,
-  // but different attackers each get their own notification
+  // Group incoming waves by attacker for the live wave counter display
   const byAttacker = new Map<number, number>(); // pi → total troops
   for (const w of wIncoming) byAttacker.set(w.pi, (byAttacker.get(w.pi) ?? 0) + w.troops);
-
-  // Clean up attackers who are no longer pressing us
-  for (const pi of attackerNotifTicks.keys()) {
-    if (!byAttacker.has(pi)) attackerNotifTicks.delete(pi);
-  }
-  // One notification per attacker, throttled independently
-  for (const [pi, troops] of byAttacker) {
-    const lastNotif = attackerNotifTicks.get(pi) ?? -1;
-    if (lastNotif < 0 || tk - lastNotif >= 100) {
-      attackerNotifTicks.set(pi, tk);
-      const name = P[pi]?.name ?? 'Enemy';
-      addNotif(hi, `⚠ ${name} attacking: ${fmt(Math.round(troops))} troops!`, '#E74C3C');
-    }
-  }
 
   (document.getElementById('waves') as HTMLElement).innerHTML = '';
   const wc = document.getElementById('waveCounter');

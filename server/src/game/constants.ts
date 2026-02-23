@@ -45,4 +45,5 @@ export const C = {
   mtT: .4,
   bulletSpd: 5, bulletDmg: 40, bulletRange: 70,
   tilesPerTick: 100,
+  tptTroopDiv: 10,   // troops needed per tile/tick; wave tpt = clamp(troops/div, 1, tilesPerTick)
 };
