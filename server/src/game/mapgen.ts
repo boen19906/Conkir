@@ -44,18 +44,26 @@ function fN(w: number, h: number, r: RNG, oc = 5, bs = 60) {
 export function genMap(gs: GameState, s: number) {
   const r = new RNG(s);
   const cs = [
-    { cx: .18, cy: .3, rx: .12, ry: .25, rt: .2 },
-    { cx: .22, cy: .6, rx: .1, ry: .18, rt: -.1 },
-    { cx: .45, cy: .28, rx: .1, ry: .15, rt: .1 },
+    { cx: .18, cy: .3,  rx: .12, ry: .25, rt: .2 },
+    { cx: .22, cy: .6,  rx: .1,  ry: .18, rt: -.1 },
+    { cx: .45, cy: .28, rx: .1,  ry: .15, rt: .1 },
     { cx: .47, cy: .55, rx: .12, ry: .22, rt: 0 },
-    { cx: .7, cy: .3, rx: .15, ry: .2, rt: -.15 },
+    { cx: .7,  cy: .3,  rx: .15, ry: .2,  rt: -.15 },
     { cx: .72, cy: .55, rx: .08, ry: .12, rt: .1 },
-    { cx: .85, cy: .5, rx: .05, ry: .08, rt: .3 },
-    { cx: .35, cy: .8, rx: .07, ry: .06, rt: 0 },
-    { cx: .5, cy: .1, rx: .2, ry: .06, rt: .05 },
+    { cx: .85, cy: .5,  rx: .05, ry: .08, rt: .3 },
+    { cx: .35, cy: .8,  rx: .07, ry: .06, rt: 0 },
+    { cx: .5,  cy: .1,  rx: .2,  ry: .06, rt: .05 },
     { cx: .55, cy: .42, rx: .03, ry: .04, rt: 0 },
     { cx: .32, cy: .45, rx: .03, ry: .03, rt: 0 },
-    { cx: .9, cy: .35, rx: .03, ry: .05, rt: .2 }
+    { cx: .9,  cy: .35, rx: .03, ry: .05, rt: .2 },
+    { cx: .08, cy: .5,  rx: .06, ry: .15, rt: .1 },
+    { cx: .25, cy: .15, rx: .08, ry: .07, rt: .05 },
+    { cx: .6,  cy: .75, rx: .12, ry: .08, rt: -.1 },
+    { cx: .8,  cy: .75, rx: .08, ry: .10, rt: .2 },
+    { cx: .38, cy: .62, rx: .06, ry: .08, rt: .1 },
+    { cx: .15, cy: .82, rx: .08, ry: .05, rt: -.05 },
+    { cx: .92, cy: .65, rx: .04, ry: .07, rt: .1 },
+    { cx: .65, cy: .88, rx: .07, ry: .04, rt: 0 },
   ];
   const m = new Float32Array(W * H);
   for (const c of cs) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -65,10 +73,10 @@ export function genMap(gs: GameState, s: number) {
     const d = a2 * a2 + b2 * b2;
     if (d < 1) { const v = (1 - d) ** 1.5, i = y * W + x; m[i] = Math.max(m[i], v); }
   }
-  const n = fN(W, H, r, 5, 60), dd = fN(W, H, r, 3, 20);
+  const n = fN(W, H, r, 5, 150), dd = fN(W, H, r, 3, 50);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x, e = m[i] * .7 + n[i] * .3;
-    const ed = Math.min(x, y, W - x - 1, H - y - 1), f = Math.min(ed / 30, 1), fe = e * f;
+    const ed = Math.min(x, y, W - x - 1, H - y - 1), f = Math.min(ed / 90, 1), fe = e * f;
     gs.ter[i] = fe < .38 ? 0 : fe > .78 ? 2 : dd[i] > .55 && fe > .46 ? 3 : 1;
     gs.own[i] = gs.ter[i] === 0 ? -2 : -1;
   }
@@ -76,7 +84,7 @@ export function genMap(gs: GameState, s: number) {
 
 export function findSp(gs: GameState, cnt: number, s: number) {
   const r = new RNG(s + 999), p: Array<{ x: number; y: number }> = [];
-  const md = Math.min(W, H) * .15, mg = 40;
+  const md = Math.min(W, H) * .07, mg = 80;
   const ca: Array<{ x: number; y: number }> = [];
   for (let y = mg; y < H - mg; y += 5) for (let x = mg; x < W - mg; x += 5) if (isL(gs, x, y)) {
     let l = 0, t = 0;
