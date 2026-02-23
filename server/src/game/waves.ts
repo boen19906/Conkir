@@ -103,9 +103,7 @@ export function procWaves(gs: GameState) {
     const w = gs.wav[wi];
     if (w.troops <= 0 || w.heap.size() === 0) { gs.wav.splice(wi, 1); continue; }
 
-    // Scale tiles-per-tick with troop count so small waves advance slowly but
-    // persist for a similar duration to large waves instead of vanishing instantly.
-    const tpt = Math.max(1, Math.min(C.tilesPerTick, Math.floor(w.troops / C.tptTroopDiv)));
+    const tpt = C.tilesPerTick;
     let cl = 0, fortCapCount = 0;
 
     while (w.heap.size() > 0 && cl < tpt && w.troops > 0) {

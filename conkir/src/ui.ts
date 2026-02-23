@@ -46,9 +46,18 @@ export function updUI() {
   (document.getElementById('waves') as HTMLElement).innerHTML = '';
   const wc = document.getElementById('waveCounter');
   if (wc) {
-    const outTot = Math.round(mw.reduce((s, w) => s + w.troops, 0));
     let wcHtml = '';
-    if (outTot > 0) wcHtml += `<div style="background:rgba(10,20,35,.88);border:1px solid #4A90D9;border-radius:5px;padding:4px 12px;font-size:12px;color:#4A90D9;margin-bottom:3px">⚔ Attacking: ${fmt(outTot)} troops</div>`;
+    // Group outgoing waves by target so each player attacked gets its own live tab
+    const byTarget = new Map<number, number>(); // targetOwner (or -2 for null/general) → total troops
+    for (const w of mw) {
+      const key = w.targetOwner ?? -2;
+      byTarget.set(key, (byTarget.get(key) ?? 0) + w.troops);
+    }
+    for (const [tgt, troops] of byTarget) {
+      const troopStr = fmt(Math.round(troops));
+      const label = tgt >= 0 ? `Attacking ${P[tgt]?.name ?? 'Enemy'}` : 'Attacking';
+      wcHtml += `<div style="background:rgba(10,20,35,.88);border:1px solid #4A90D9;border-radius:5px;padding:4px 12px;font-size:12px;color:#4A90D9;margin-bottom:3px">⚔ ${label}: ${troopStr} troops</div>`;
+    }
     for (const [pi, troops] of byAttacker) {
       const name = P[pi]?.name ?? 'Enemy';
       wcHtml += `<div style="background:rgba(10,20,35,.88);border:1px solid #E74C3C;border-radius:5px;padding:4px 12px;font-size:12px;color:#E74C3C;margin-bottom:3px">⚠ ${name}: ${fmt(Math.round(troops))} troops</div>`;

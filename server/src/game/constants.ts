@@ -25,7 +25,7 @@ export const BC: BotConfig[] = [
 export const C = {
   tr: 10,
   gB: 5, gT: .03,
-  atkBase: 0.35,
+  atkBase: 0.18,
   defLoss: 1.0,
   unclaimedCost: .01,
   naC: 15000, nhC: 50000,
@@ -45,5 +45,4 @@ export const C = {
   mtT: .4,
   bulletSpd: 5, bulletDmg: 40, bulletRange: 70,
   tilesPerTick: 100,
-  tptTroopDiv: 10,   // troops needed per tile/tick; wave tpt = clamp(troops/div, 1, tilesPerTick)
 };
