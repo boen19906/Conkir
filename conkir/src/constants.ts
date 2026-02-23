@@ -1,6 +1,6 @@
 import type { BotConfig } from './types';
 
-export const W = 1600, H = 1000;
+export const W = 800, H = 500;
 
 export const COL = [
   0x4A90D9, 0xE74C3C, 0x2ECC71, 0xF39C12, 0x9B59B6, 0x1ABC9C,
