@@ -30,7 +30,7 @@ export let run: boolean = false;
 export let gOv: boolean = false;
 export let victoryShown: boolean = false;
 export let underAttack: boolean = false;
-export let lastAttackNotif: number = 0;
+export let waveNotifTicks: Map<number, number> = new Map(); // waveId → last tick notified
 
 // Setters for reassigned bindings
 export function setTer(v: Uint8Array) { ter = v; }
@@ -56,7 +56,6 @@ export function setRun(v: boolean) { run = v; }
 export function setGOv(v: boolean) { gOv = v; }
 export function setVictoryShown(v: boolean) { victoryShown = v; }
 export function setUnderAttack(v: boolean) { underAttack = v; }
-export function setLastAttackNotif(v: number) { lastAttackNotif = v; }
 export function setAtkRatio(v: number) { atkRatio = v; }
 
 // ID counters — return old value and increment (like nwid++)

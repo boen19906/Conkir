@@ -1,4 +1,4 @@
-import { P, wav, notifs, botProposals, setBotProposals, underAttack, lastAttackNotif, setUnderAttack, setLastAttackNotif, tk, addNotif } from './state';
+import { P, wav, notifs, botProposals, setBotProposals, underAttack, waveNotifTicks, setUnderAttack, tk, addNotif } from './state';
 import { DI } from './constants';
 import { sD, gD } from './diplomacy';
 import { isMultiplayer, send } from './network';
@@ -37,12 +37,22 @@ export function updUI() {
 
   const mw = wav.filter(w => w.pi === hi);
   const wIncoming = wav.filter(w => w.targetOwner === hi && w.troops > 50);
-  const tot = Math.round(wIncoming.reduce((s, w) => s + w.troops, 0) || 0);
   const wasUnderAttack = underAttack;
   setUnderAttack(wIncoming.length > 0);
-  if (underAttack && (!wasUnderAttack || tk - lastAttackNotif >= 100)) {
-    setLastAttackNotif(tk);
-    addNotif(hi, `⚠ Under attack: ${fmt(tot)} troops incoming!`, '#E74C3C');
+
+  // Clean up entries for waves that no longer exist
+  const incomingIds = new Set(wIncoming.map(w => w.id));
+  for (const id of waveNotifTicks.keys()) {
+    if (!incomingIds.has(id)) waveNotifTicks.delete(id);
+  }
+  // Notify per distinct incoming wave — each Wave object is already a separate disconnected front
+  // (the server merges touching/adjacent waves, so separate objects = separate fronts)
+  for (const w of wIncoming) {
+    const lastNotif = waveNotifTicks.get(w.id) ?? -1;
+    if (lastNotif < 0 || tk - lastNotif >= 100) {
+      waveNotifTicks.set(w.id, tk);
+      addNotif(hi, `⚠ Under attack: ${fmt(w.troops)} troops incoming!`, '#E74C3C');
+    }
   }
 
   (document.getElementById('waves') as HTMLElement).innerHTML = '';
