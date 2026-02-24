@@ -8,7 +8,7 @@ import { buildB } from './game/buildings';
 import { sD } from './game/diplomacy';
 import { doNuke } from './game/nukes';
 import { spShip, navInv } from './game/naval';
-import { COL, NM, W, H } from './game/constants';
+import { COL, NM, W, H, C } from './game/constants';
 import type { ClientMessage, ServerMessage, MsgTick, SpawnPoint } from './protocol';
 
 export interface PlayerSlot {
@@ -310,7 +310,7 @@ export class GameRoom {
     // so clients paint them immediately instead of showing a neutral-grey crater.
 
     this.gs.run = true;
-    this.tickInterval = setInterval(() => this.tick(), 100);
+    this.tickInterval = setInterval(() => this.tick(), C.tr);
   }
 
   // ---- Game loop ----

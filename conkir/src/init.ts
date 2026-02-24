@@ -38,8 +38,8 @@ export function updateMpSpawnInfo(spawns: SpawnPoint[], remainingMs: number) {
 // ---- Solo game loop ----
 function loop(now: number) {
   if (!run) return;
-  const dt = Math.min(now - lt, 100); lt = now; acc += dt;
-  const iv = 1000 / C.tr;
+  const dt = Math.min(now - lt, C.tr * 3); lt = now; acc += dt;
+  const iv = C.tr;
   while (acc >= iv) {
     for (const b of bots) b.u();
     gameTick();

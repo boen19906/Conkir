@@ -1,6 +1,6 @@
 import type { BotConfig } from './types';
 
-export const W = 800, H = 500;
+export const W = 1100, H = 700;
 
 export const COL = [
   0x4A90D9, 0xE74C3C, 0x2ECC71, 0xF39C12, 0x9B59B6, 0x1ABC9C,
@@ -23,7 +23,7 @@ export const BC: BotConfig[] = [
 ];
 
 export const C = {
-  tr: 10,
+  tr: 150,
   gB: 5, gT: .03,
   atkBase: 0.18,
   defLoss: 1.0,
@@ -44,5 +44,5 @@ export const C = {
   tradeSpawnInterval: 350,
   mtT: .4,
   bulletSpd: 5, bulletDmg: 40, bulletRange: 70,
-  tilesPerTick: 100,
+  tilesPerTick: 65,
 };
