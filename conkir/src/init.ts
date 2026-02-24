@@ -89,11 +89,16 @@ export function beginSpawnPhase(sd: number, df: number, bc: number) {
 
   const oc = document.createElement('canvas'); oc.width = W; oc.height = H;
   const ox = oc.getContext('2d') as CanvasRenderingContext2D;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const t = ter[I(x, y)];
-    ox.fillStyle = t === 0 ? '#071828' : t === 1 ? '#2a5218' : t === 2 ? '#4a7c2f' : '#6b9e40';
-    ox.fillRect(x, y, 1, 1);
+  const spImg = ox.createImageData(W, H); const spd = spImg.data;
+  for (let i = 0; i < W * H; i++) {
+    const t = ter[i], pp = i * 4;
+    if (t === 0)      { spd[pp] = 7;   spd[pp+1] = 24;  spd[pp+2] = 40; }
+    else if (t === 1) { spd[pp] = 42;  spd[pp+1] = 82;  spd[pp+2] = 24; }
+    else if (t === 2) { spd[pp] = 74;  spd[pp+1] = 124; spd[pp+2] = 47; }
+    else              { spd[pp] = 107; spd[pp+1] = 158; spd[pp+2] = 64; }
+    spd[pp+3] = 255;
   }
+  ox.putImageData(spImg, 0, 0);
 
   const ss = document.getElementById('spawnScreen') as HTMLElement; ss.style.display = 'block';
   const sc = document.getElementById('spawnCanvas') as HTMLCanvasElement;
@@ -189,11 +194,16 @@ export function beginMultiplayerSpawnPhase(msg: MsgGameStarting, onSpawn: (x: nu
 
   const oc = document.createElement('canvas'); oc.width = W; oc.height = H;
   const ox = oc.getContext('2d') as CanvasRenderingContext2D;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const t = ter[I(x, y)];
-    ox.fillStyle = t === 0 ? '#071828' : t === 1 ? '#2a5218' : t === 2 ? '#4a7c2f' : '#6b9e40';
-    ox.fillRect(x, y, 1, 1);
+  const spImg2 = ox.createImageData(W, H); const spd2 = spImg2.data;
+  for (let i = 0; i < W * H; i++) {
+    const t = ter[i], pp = i * 4;
+    if (t === 0)      { spd2[pp] = 7;   spd2[pp+1] = 24;  spd2[pp+2] = 40; }
+    else if (t === 1) { spd2[pp] = 42;  spd2[pp+1] = 82;  spd2[pp+2] = 24; }
+    else if (t === 2) { spd2[pp] = 74;  spd2[pp+1] = 124; spd2[pp+2] = 47; }
+    else              { spd2[pp] = 107; spd2[pp+1] = 158; spd2[pp+2] = 64; }
+    spd2[pp+3] = 255;
   }
+  ox.putImageData(spImg2, 0, 0);
 
   const ss = document.getElementById('spawnScreen') as HTMLElement; ss.style.display = 'block';
   const sc = document.getElementById('spawnCanvas') as HTMLCanvasElement;

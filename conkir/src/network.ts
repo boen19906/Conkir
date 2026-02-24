@@ -3,6 +3,7 @@ import {
   setBotProposals, botProposals,
   own, notifs, P, bld, exp
 } from './state';
+import { markMapDirty } from './render';
 import { COL } from './constants';
 import type {
   ServerMessage, MsgTick, MsgGameStarting, ClientMessage
@@ -210,6 +211,8 @@ function applyTick(msg: MsgTick) {
   if (msg.dipChanged && msg.dip) {
     setDip(new Map(msg.dip));
   }
+
+  markMapDirty();
 }
 
 export function isMultiplayer(): boolean { return netMode === 'multiplayer'; }

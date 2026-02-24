@@ -4,6 +4,9 @@ import { B, I } from './mapgen';
 import { FlatBinaryHeap } from './heap';
 import { gD, getDefenseMultiplier, addConflict } from './diplomacy';
 
+const _DX = [-1, 1, 0, 0];
+const _DY = [0, 0, -1, 1];
+
 function openFrontPriority(gs: GameState, ni: number, pi: number, tickNow: number) {
   const x = ni % W, y = (ni / W) | 0;
   let numOwnedByMe = 0;
@@ -182,28 +185,32 @@ export function procWaves(gs: GameState) {
 
   // Encirclement sweep: claim any land tile whose every land neighbor belongs to the
   // same single player (unclaimed pockets and tiny isolated enemy tiles left by waves).
-  for (let i = 0; i < W * H; i++) {
-    if (gs.ter[i] === 0) continue;       // water
-    const o = gs.own[i];
-    let captor = -99, landCount = 0, allSame = true;
-    const x = i % W, y = (i / W) | 0;
-    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-      const nx = x + dx, ny = y + dy;
-      if (!B(nx, ny)) continue;
-      const nni = I(nx, ny);
-      if (gs.ter[nni] === 0) continue;   // water neighbor doesn't count
-      landCount++;
-      const no = gs.own[nni];
-      if (no < 0) { allSame = false; break; }       // unclaimed neighbor → not enclosed
-      if (captor === -99) captor = no;
-      else if (no !== captor) { allSame = false; break; }
-    }
-    if (!allSame || captor < 0 || captor === o || landCount < 2) continue;
-    // Tile is completely surrounded by one player — claim it
-    if (o === -1) {
-      gs.own[i] = captor;               // unclaimed pocket: free claim
-    } else if (o >= 0 && gD(gs, captor, o) !== 'peace') {
-      gs.own[i] = captor;               // isolated enemy tile: siege capture
+  // Only run when there are active waves — no waves means no new encirclements possible.
+  if (gs.wav.length > 0) {
+    const size = W * H;
+    for (let i = 0; i < size; i++) {
+      if (gs.ter[i] === 0) continue;       // water
+      const o = gs.own[i];
+      let captor = -99, landCount = 0, allSame = true;
+      const x = i % W, y = (i / W) | 0;
+      for (let d = 0; d < 4; d++) {
+        const nx = x + _DX[d], ny = y + _DY[d];
+        if (!B(nx, ny)) continue;
+        const nni = I(nx, ny);
+        if (gs.ter[nni] === 0) continue;   // water neighbor doesn't count
+        landCount++;
+        const no = gs.own[nni];
+        if (no < 0) { allSame = false; break; }       // unclaimed neighbor → not enclosed
+        if (captor === -99) captor = no;
+        else if (no !== captor) { allSame = false; break; }
+      }
+      if (!allSame || captor < 0 || captor === o || landCount < 2) continue;
+      // Tile is completely surrounded by one player — claim it
+      if (o === -1) {
+        gs.own[i] = captor;               // unclaimed pocket: free claim
+      } else if (o >= 0 && gD(gs, captor, o) !== 'peace') {
+        gs.own[i] = captor;               // isolated enemy tile: siege capture
+      }
     }
   }
 }

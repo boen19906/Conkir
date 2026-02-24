@@ -234,12 +234,17 @@ onMsg('gameStarting', (msg) => {
   _mpMySpawn = null;
   _mpGameLaunched = false;
   _mpDefeated = false;
-  applyGameStart(msg);
   (document.getElementById('lobbyScreen') as HTMLElement).style.display = 'none';
-  beginMultiplayerSpawnPhase(msg, (x, y) => {
-    _mpMySpawn = { x, y };
-    send({ type: 'spawn', x, y });
-  });
+  (document.getElementById('loadingScreen') as HTMLElement).style.display = 'flex';
+  // Defer heavy decoding + spawn canvas build so the loading screen renders first
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    applyGameStart(msg);
+    (document.getElementById('loadingScreen') as HTMLElement).style.display = 'none';
+    beginMultiplayerSpawnPhase(msg, (x, y) => {
+      _mpMySpawn = { x, y };
+      send({ type: 'spawn', x, y });
+    });
+  }));
 });
 
 onMsg('spawnUpdate', (msg) => {
