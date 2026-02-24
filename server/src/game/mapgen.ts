@@ -76,7 +76,7 @@ export function genMap(gs: GameState, s: number) {
 
 export function findSp(gs: GameState, cnt: number, s: number) {
   const r = new RNG(s + 999), p: Array<{ x: number; y: number }> = [];
-  const md = Math.min(W, H) * .15, mg = 40;
+  const md = Math.max(35, Math.min(W, H) * .15 / Math.max(1, cnt / 8)), mg = 40;
   const ca: Array<{ x: number; y: number }> = [];
   for (let y = mg; y < H - mg; y += 5) for (let x = mg; x < W - mg; x += 5) if (isL(gs, x, y)) {
     let l = 0, t = 0;

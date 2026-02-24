@@ -46,7 +46,7 @@ export class GameRoom {
     this.code = code;
     this.gs = new GameState();
     this.hostConnId = hostConnId;
-    this.botCount = Math.max(0, Math.min(8, botCount));
+    this.botCount = Math.max(0, Math.min(50, botCount));
     this.difficulty = Math.max(0, Math.min(3, difficulty));
     this.slots.push({
       ws: hostWs,
@@ -71,7 +71,7 @@ export class GameRoom {
   }
 
   updateConfig(botCount: number, difficulty: number) {
-    this.botCount = Math.max(0, Math.min(8, botCount));
+    this.botCount = Math.max(0, Math.min(50, botCount));
     this.difficulty = Math.max(0, Math.min(3, difficulty));
     this.broadcastLobbyUpdate();
   }

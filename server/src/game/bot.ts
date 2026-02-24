@@ -75,7 +75,7 @@ export class Bot implements IBot {
 
   getBorder() {
     const gs = this.gs;
-    if (gs.tk - this.bTk < 20 && this.bCache.length > 0) return this.bCache;
+    if (gs.tk - this.bTk < 30 && this.bCache.length > 0) return this.bCache;
     const b: Array<{ x: number; y: number }> = [];
     for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) {
       if (gs.own[I(x, y)] !== this.pi) continue;

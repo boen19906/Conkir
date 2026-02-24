@@ -272,32 +272,10 @@ onMsg('tick', () => {
 });
 
 onMsg('peaceProposal', (msg) => {
-  if (msg.isBot) {
-    // Bot proposal: inline notification card (not modal)
-    if (!botProposals.some(p => p.from === msg.proposerIndex)) {
-      setBotProposals([...botProposals, { from: msg.proposerIndex, name: msg.proposerName, color: msg.proposerColor, addedAt: Date.now() }]);
-    }
-    return;
+  // All proposals (bot or human) use the same inline notification card
+  if (!botProposals.some(p => p.from === msg.proposerIndex)) {
+    setBotProposals([...botProposals, { from: msg.proposerIndex, name: msg.proposerName, color: msg.proposerColor, addedAt: Date.now() }]);
   }
-
-  // Human→human proposal: modal overlay
-  const ov = document.getElementById('peaceOverlay') as HTMLElement;
-  const msgEl = document.getElementById('peaceProposalMsg') as HTMLElement;
-  const acceptBtn = document.getElementById('peaceAcceptBtn') as HTMLButtonElement;
-  const rejectBtn = document.getElementById('peaceRejectBtn') as HTMLButtonElement;
-
-  msgEl.innerHTML = `<span style="color:#FFD700;font-weight:700">${msg.proposerName}</span> is proposing peace.<br><span style="font-size:12px;opacity:0.7">Do you accept?</span>`;
-  ov.style.display = 'flex';
-
-  const close = () => { ov.style.display = 'none'; };
-  acceptBtn.onclick = () => {
-    send({ type: 'action', action: { kind: 'peaceAccept', target: msg.proposerIndex } });
-    close();
-  };
-  rejectBtn.onclick = () => {
-    send({ type: 'action', action: { kind: 'peaceReject', target: msg.proposerIndex } });
-    close();
-  };
 });
 
 onMsg('gameOver', (msg) => {

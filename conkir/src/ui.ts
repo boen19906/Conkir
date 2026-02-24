@@ -55,7 +55,7 @@ export function updUI() {
     }
     for (const [tgt, troops] of byTarget) {
       const troopStr = fmt(Math.round(troops));
-      const label = tgt >= 0 ? `Attacking ${P[tgt]?.name ?? 'Enemy'}` : 'Attacking';
+      const label = tgt >= 0 ? `Attacking ${P[tgt]?.name ?? 'Enemy'}` : tgt === -1 ? 'Expanding' : 'Attacking';
       wcHtml += `<div style="background:rgba(10,20,35,.88);border:1px solid #4A90D9;border-radius:5px;padding:4px 12px;font-size:12px;color:#4A90D9;margin-bottom:3px">⚔ ${label}: ${troopStr} troops</div>`;
     }
     for (const [pi, troops] of byAttacker) {

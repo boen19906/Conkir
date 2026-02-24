@@ -59,7 +59,7 @@
   <!-- Page 2: Solo setup -->
   <div id="menuSoloSetup" style="display:none">
     <div class="mr" style="margin-top:8px"><label>Difficulty</label><select id="dif"><option value="0">Easy</option><option value="1" selected>Medium</option><option value="2">Hard</option><option value="3">Impossible</option></select></div>
-    <div class="mr"><label>Bots</label><select id="bots"><option>3</option><option selected>5</option><option>7</option><option>10</option></select></div>
+    <div class="mr"><label>Bots</label><input id="bots" type="number" min="0" max="50" value="5" style="background:#0a1428;border:1px solid #4A90D9;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:14px;width:72px"/></div>
     <button class="sb" id="startBtn" style="margin-top:8px">START GAME</button>
     <button id="soloBackBtn" style="margin-top:8px;background:transparent;border:1px solid #4A90D9;color:#7ec8e3;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px">← Back</button>
   </div>
@@ -96,13 +96,8 @@
 
       <div class="lobbyHostOnly" style="display:none;flex-direction:column;gap:8px;border-top:1px solid rgba(74,144,217,0.2);padding-top:10px">
         <div class="mr"><label>Bots</label>
-          <select id="mpBotCount">
-            <option value="0">None</option>
-            <option value="2">2</option>
-            <option value="3" selected>3</option>
-            <option value="5">5</option>
-            <option value="8">8</option>
-          </select>
+          <input id="mpBotCount" type="number" min="0" max="50" value="3"
+            style="background:#0a1428;border:1px solid #4A90D9;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:14px;width:72px"/>
         </div>
         <div class="mr"><label>Difficulty</label>
           <select id="mpDifficulty">

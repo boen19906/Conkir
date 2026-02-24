@@ -23,7 +23,7 @@ export const BC: BotConfig[] = [
 ];
 
 export const C = {
-  tr: 150,
+  tr: 100,
   gB: 5, gT: .03,
   atkBase: 0.18,
   defLoss: 1.0,
@@ -44,5 +44,5 @@ export const C = {
   tradeSpawnInterval: 350,
   mtT: .4,
   bulletSpd: 5, bulletDmg: 40, bulletRange: 70,
-  tilesPerTick: 65,
+  tilesPerTick: 80,
 };

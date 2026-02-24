@@ -10,7 +10,7 @@ import { W, H, NM, COL, C } from './constants';
 import { own, ter } from './state';
 import { genMap, findSp, isL, B, I } from './mapgen';
 import { Bot } from './bot';
-import { render, rsz, setCam, setZm, resetRenderCache } from './render';
+import { render, rsz, setCam, setZm, resetRenderCache, markMapDirty } from './render';
 import { gameTick } from './tick';
 import { updUI } from './ui';
 import type { MsgGameStarting, SpawnPoint } from './protocol';
@@ -43,6 +43,7 @@ function loop(now: number) {
   while (acc >= iv) {
     for (const b of bots) b.u();
     gameTick();
+    markMapDirty();
     acc -= iv;
   }
   render(); updUI();
