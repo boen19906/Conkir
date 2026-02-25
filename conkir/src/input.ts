@@ -12,6 +12,7 @@ import { send, isMultiplayer } from './network';
 
 let drag = false, downX = 0, downY = 0, dragMoved = false;
 const DRAG_THRESHOLD = 5;
+let mouseScreenX = 0, mouseScreenY = 0;
 
 cv.addEventListener('mousedown', e => {
   hideCm();
@@ -20,6 +21,7 @@ cv.addEventListener('mousedown', e => {
 });
 
 cv.addEventListener('mousemove', e => {
+  mouseScreenX = e.clientX; mouseScreenY = e.clientY;
   if (!drag) return;
   const dx = e.clientX - downX, dy = e.clientY - downY;
   if (!dragMoved && (Math.abs(dx) + Math.abs(dy)) > DRAG_THRESHOLD) { dragMoved = true; cv.classList.add('dragging'); }
@@ -165,7 +167,21 @@ cv.addEventListener('wheel', e => {
   setZm(Math.max(.3, Math.min(6, zm * (e.deltaY < 0 ? 1.1 : .9))));
 }, { passive: false });
 
-addEventListener('keydown', e => { if (e.key === 'Escape') hideCm(); });
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') { hideCm(); return; }
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+  const buildKey: Record<string, string> = { c: 'city', f: 'factory', m: 'silo', s: 'sam' };
+  const btype = buildKey[e.key.toLowerCase()];
+  if (!btype) return;
+  const hi = P.findIndex(p => p.hu);
+  if (hi < 0 || !P[hi]?.alive) return;
+  const { x, y } = s2m(mouseScreenX, mouseScreenY);
+  if (isMultiplayer()) {
+    send({ type: 'action', action: { kind: 'buildB', btype, x, y } });
+  } else {
+    buildB(hi, btype, x, y);
+  }
+});
 
 // Touch support
 let ltx = 0, lty = 0, ltd = 0, tDrag = false;
