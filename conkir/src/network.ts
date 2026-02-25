@@ -4,7 +4,7 @@ import {
   own, notifs, P, bld, exp
 } from './state';
 import { markMapDirty } from './render';
-import { COL } from './constants';
+import { playerColor } from './constants';
 import type {
   ServerMessage, MsgTick, MsgGameStarting, ClientMessage
 } from './protocol';
@@ -87,7 +87,7 @@ export function applyGameStart(msg: MsgGameStarting) {
   const newP = msg.playerNames.map((name, i) => ({
     id: i,
     name,
-    color: msg.playerColors[i] ?? COL[i % COL.length],
+    color: msg.playerColors[i] ?? playerColor(i),
     troops: 50,
     maxTroops: 200,
     money: 2000,

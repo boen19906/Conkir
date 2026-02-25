@@ -9,7 +9,8 @@
       "Bash(npm run build:*)",
       "Bash(test:*)",
       "Bash(npx tsc:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(head:*)"
     ]
   }
 }

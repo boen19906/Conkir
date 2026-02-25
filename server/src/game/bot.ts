@@ -25,7 +25,7 @@ export class Bot implements IBot {
     this.gs = gs;
     this.pi = pi;
     this.c = BC[gs.P[pi].df] || BC[1];
-    this.le = -(pi * 7 % this.c.ef); this.lb = 0; this.ln = -pi * 35; this.ls = -pi * 28; this.lnv = -pi * 42;
+    this.le = 30 - this.c.ef + (pi * 7 % this.c.ef); this.lb = 0; this.ln = -pi * 35; this.ls = -pi * 28; this.lnv = -pi * 42;
     this.bCache = []; this.bTk = -1;
   }
 

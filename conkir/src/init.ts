@@ -6,7 +6,7 @@ import {
   bots, run, gOv,
   resetIds
 } from './state';
-import { W, H, NM, COL, C } from './constants';
+import { W, H, NM, playerColor, C } from './constants';
 import { own, ter } from './state';
 import { genMap, findSp, isL, B, I } from './mapgen';
 import { Bot } from './bot';
@@ -75,7 +75,7 @@ function multiplayerLoop() {
 
 export function addP(nm: string, sx: number, sy: number, hu: boolean, df: number) {
   const i = P.length;
-  P.push({ id: i, name: nm, color: COL[i % COL.length], troops: 50, maxTroops: 200, money: 2000, hu, alive: true, df, territory: 0, growth: 0, income: 0 });
+  P.push({ id: i, name: nm, color: playerColor(i), troops: 50, maxTroops: 200, money: 2000, hu, alive: true, df, territory: 0, growth: 0, income: 0 });
   const r = 10;
   for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++)
     if (dx * dx + dy * dy <= r * r && isL(sx + dx, sy + dy)) own[I(sx + dx, sy + dy)] = i;
@@ -85,7 +85,10 @@ export function addP(nm: string, sx: number, sy: number, hu: boolean, df: number
 export function beginSpawnPhase(sd: number, df: number, bc: number) {
   genMap(sd);
   const botSp = findSp(bc, sd);
-  const sn = [...NM].sort(() => Math.random() - .5);
+  const baseNames = [...NM].sort(() => Math.random() - .5);
+  const sn = Array.from({ length: bc }, (_, i) =>
+    i < baseNames.length ? baseNames[i] : `Bot ${i + 1}`
+  );
   _spawnData = { sd, df, bc, botSp, sn };
 
   const oc = document.createElement('canvas'); oc.width = W; oc.height = H;

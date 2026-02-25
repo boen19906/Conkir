@@ -8,7 +8,7 @@ import { buildB } from './game/buildings';
 import { sD } from './game/diplomacy';
 import { doNuke } from './game/nukes';
 import { spShip, navInv } from './game/naval';
-import { COL, NM, W, H, C } from './game/constants';
+import { COL, playerColor, NM, W, H, C } from './game/constants';
 import type { ClientMessage, ServerMessage, MsgTick, SpawnPoint } from './protocol';
 
 export interface PlayerSlot {
@@ -118,7 +118,7 @@ export class GameRoom {
         ownB64: Buffer.from(ownBytes).toString('base64'),
         yourPlayerIndex: slot.playerIndex,
         playerNames: this.slots.map(s => s.name),
-        playerColors: this.slots.map((_, i) => COL[i % COL.length]),
+        playerColors: this.slots.map((_, i) => playerColor(i)),
         botSpawns: [],
         spawnTimeoutMs: 0
       });
@@ -163,7 +163,7 @@ export class GameRoom {
       ...this.slots.map(s => s.name),
       ...this.botNames
     ];
-    const playerColors = playerNames.map((_, i) => COL[i % COL.length]);
+    const playerColors = playerNames.map((_, i) => playerColor(i));
 
     for (const slot of this.slots) {
       this.send(slot.ws, {
@@ -227,7 +227,7 @@ export class GameRoom {
     this.gs.P[i] = {
       id: i,
       name: slot.name,
-      color: COL[i % COL.length],
+      color: playerColor(i),
       troops: 50,
       maxTroops: 200,
       money: 2000,
@@ -282,7 +282,7 @@ export class GameRoom {
       this.gs.P[bi] = {
         id: bi,
         name: this.botNames[i] || `Bot ${i + 1}`,
-        color: COL[bi % COL.length],
+        color: playerColor(bi),
         troops: 50,
         maxTroops: 200,
         money: 2000,
