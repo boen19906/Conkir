@@ -38,8 +38,14 @@ function buildLabels() {
   for (const p of P) {
     if (!p.alive) continue;
     let sx = 0, sy = 0, sc = 0;
-    for (let y = 0; y < H; y += 8) for (let x = 0; x < W; x += 8) if (own[I(x, y)] === p.id) { sx += x; sy += y; sc++; }
-    if (sc > 0) labelCache.push({ id: p.id, name: p.name, color: p.color, x: sx / sc, y: sy / sc, ter: p.territory });
+    const pts: [number, number][] = [];
+    for (let y = 0; y < H; y += 8) for (let x = 0; x < W; x += 8) if (own[I(x, y)] === p.id) { sx += x; sy += y; sc++; pts.push([x, y]); }
+    if (sc > 0) {
+      const cx = sx / sc, cy = sy / sc;
+      let bx = pts[0][0], by = pts[0][1], bd = Infinity;
+      for (const [px, py] of pts) { const d = (px - cx) ** 2 + (py - cy) ** 2; if (d < bd) { bd = d; bx = px; by = py; } }
+      labelCache.push({ id: p.id, name: p.name, color: p.color, x: bx, y: by, ter: p.territory });
+    }
   }
 }
 
