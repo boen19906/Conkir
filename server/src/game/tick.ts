@@ -1,5 +1,5 @@
 import type { GameState } from './state';
-import { C } from './constants';
+import { C, W, H } from './constants';
 import { cntT } from './buildings';
 import { procWaves } from './waves';
 import { procMissiles } from './nukes';
@@ -48,6 +48,8 @@ export function gameTick(gs: GameState) {
       gs.bld = gs.bld.filter(b => b.ow !== p.id);
       gs.unt = gs.unt.filter(u => u.ow !== p.id);
       gs.wav = gs.wav.filter(w => w.pi !== p.id);
+      // Release remaining tiles so other players can claim them
+      for (let i = 0; i < W * H; i++) { if (gs.own[i] === p.id) gs.own[i] = -1; }
     }
     // Victory check is handled in GameRoom.tick() — no DOM code here
   }
