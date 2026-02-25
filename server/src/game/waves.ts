@@ -185,8 +185,8 @@ export function procWaves(gs: GameState) {
 
   // Encirclement sweep: claim any land tile whose every land neighbor belongs to the
   // same single player (unclaimed pockets and tiny isolated enemy tiles left by waves).
-  // Only run when there are active waves — no waves means no new encirclements possible.
-  if (gs.wav.length > 0) {
+  // Run every 3 ticks to reduce CPU cost — a few ticks delay is not visually noticeable.
+  if (gs.wav.length > 0 && gs.tk % 3 === 0) {
     const size = W * H;
     for (let i = 0; i < size; i++) {
       if (gs.ter[i] === 0) continue;       // water

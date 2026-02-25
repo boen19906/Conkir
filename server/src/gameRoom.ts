@@ -386,13 +386,20 @@ export class GameRoom {
       dip: dipChanged ? [...this.gs.dip.entries()] as Array<[string, string]> : null,
     };
 
+    // Serialize the base tick once (no notifs) and reuse for players that have none.
+    // Players with notifs get their own stringify — rare in practice.
+    const noNotifsJson = JSON.stringify({ type: 'tick', ...baseTick, notifs: [] });
     for (const slot of this.slots) {
       if (!slot.connected || slot.ws.readyState !== WebSocket.OPEN) continue;
       const myNotifs = this.gs.pendingNotifs
         .filter(n => n.pi === slot.playerIndex || n.pi === -99)
         .map(n => ({ msg: n.msg, color: n.color, ttl: n.ttl, pi: n.pi }));
-      const msg: MsgTick = { type: 'tick', ...baseTick, notifs: myNotifs };
-      slot.ws.send(JSON.stringify(msg));
+      if (myNotifs.length === 0) {
+        slot.ws.send(noNotifsJson);
+      } else {
+        const msg: MsgTick = { type: 'tick', ...baseTick, notifs: myNotifs };
+        slot.ws.send(JSON.stringify(msg));
+      }
     }
 
     // Send any bot→human peace proposals as WS messages and clear

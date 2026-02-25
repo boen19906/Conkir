@@ -34,7 +34,6 @@ export function gameTick(gs: GameState) {
       p.money += p.income;
     }
   }
-  if (gs.tk % 5 === 0 && gs.tk % 10 !== 0) for (const p of gs.P) if (p.alive) p.territory = cntT(gs, p.id);
   spawnTradeShips(gs);
   updTradeShips(gs);
   updUnits(gs);

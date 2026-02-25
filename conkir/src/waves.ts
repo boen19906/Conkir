@@ -182,6 +182,8 @@ export function procWaves() {
 
   // Encirclement sweep: claim any land tile whose every land neighbor belongs to the
   // same single player (unclaimed pockets and tiny isolated enemy tiles left by waves).
+  // Run every 3 ticks to reduce CPU cost — a few ticks delay is not visually noticeable.
+  if (tk % 3 !== 0) return;
   for (let i = 0; i < W * H; i++) {
     if (ter[i] === 0) continue;        // water
     const o = own[i];
