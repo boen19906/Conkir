@@ -25,7 +25,7 @@ export class Bot implements IBot {
     this.gs = gs;
     this.pi = pi;
     this.c = BC[gs.P[pi].df] || BC[1];
-    this.le = -(pi * 7 % c.ef); this.lb = -(pi * 21 % c.bf); this.ln = -pi * 35; this.ls = -pi * 28; this.lnv = -pi * 42;
+    this.le = -(pi * 7 % this.c.ef); this.lb = 0; this.ln = -pi * 35; this.ls = -pi * 28; this.lnv = -pi * 42;
     this.bCache = []; this.bTk = -1;
   }
 
@@ -100,9 +100,6 @@ export class Bot implements IBot {
     // Reserve ratio: don't attack if we're below the minimum troop reserve
     const minReserve = p.maxTroops * this.c.mr;
     if (p.troops < minReserve) return;
-
-    // Cap concurrent outgoing waves to prevent wave accumulation lag
-    if (gs.wav.filter(w => w.pi === this.pi).length >= 4) return;
 
     const attackersOnUs = gs.wav.filter(w => w.targetOwner === this.pi && gs.P[w.pi]?.alive && w.troops > 50);
     const isUnderPressure = attackersOnUs.length > 0;

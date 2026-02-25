@@ -76,18 +76,18 @@ export function mkWave(pi: number, cx: number, cy: number, tr: number, targetOwn
 
 export function procWaves() {
   for (const w of wav) {
-    w._pressing = new Set();
+    w._pressing.clear();
     for (const ni of w.inHeap) {
       const o = own[ni];
       if (o >= 0 && o !== w.pi) w._pressing.add(o);
     }
   }
 
-  const processed = new Set<string>();
+  const processed = new Set<number>();
   for (const wA of wav) {
     for (const wB of wav) {
       if (wA === wB || wA.pi === wB.pi) continue;
-      const key = wA.pi < wB.pi ? `${wA.pi}:${wB.pi}` : `${wB.pi}:${wA.pi}`;
+      const key = wA.pi < wB.pi ? wA.pi * 10000 + wB.pi : wB.pi * 10000 + wA.pi;
       if (processed.has(key)) continue;
       if (!wA._pressing.has(wB.pi) || !wB._pressing.has(wA.pi)) continue;
       processed.add(key);

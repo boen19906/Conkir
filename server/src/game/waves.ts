@@ -79,18 +79,18 @@ export function mkWave(gs: GameState, pi: number, cx: number, cy: number, tr: nu
 
 export function procWaves(gs: GameState) {
   for (const w of gs.wav) {
-    w._pressing = new Set();
+    w._pressing.clear();
     for (const ni of w.inHeap) {
       const o = gs.own[ni];
       if (o >= 0 && o !== w.pi) w._pressing.add(o);
     }
   }
 
-  const processed = new Set<string>();
+  const processed = new Set<number>();
   for (const wA of gs.wav) {
     for (const wB of gs.wav) {
       if (wA === wB || wA.pi === wB.pi) continue;
-      const key = wA.pi < wB.pi ? `${wA.pi}:${wB.pi}` : `${wB.pi}:${wA.pi}`;
+      const key = wA.pi < wB.pi ? wA.pi * 10000 + wB.pi : wB.pi * 10000 + wA.pi;
       if (processed.has(key)) continue;
       if (!wA._pressing.has(wB.pi) || !wB._pressing.has(wA.pi)) continue;
       processed.add(key);
