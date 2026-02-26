@@ -170,12 +170,21 @@ cv.addEventListener('wheel', e => {
 addEventListener('keydown', e => {
   if (e.key === 'Escape') { hideCm(); return; }
   if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-  const buildKey: Record<string, string> = { c: 'city', f: 'factory', m: 'silo', s: 'sam' };
-  const btype = buildKey[e.key.toLowerCase()];
-  if (!btype) return;
   const hi = P.findIndex(p => p.hu);
   if (hi < 0 || !P[hi]?.alive) return;
   const { x, y } = s2m(mouseScreenX, mouseScreenY);
+  const k = e.key.toLowerCase();
+  if (k === 'a' || k === 'h') {
+    const o = own[I(x, y)];
+    if (o < 0 || o === hi || !P[o]?.alive || gD(hi, o) === 'peace') return;
+    if (!bld.some(b => b.ow === hi && b.type === 'silo')) return;
+    if (isMultiplayer()) send({ type: 'action', action: { kind: 'doNuke', nukeType: k, tx: x, ty: y } });
+    else doNuke(hi, k, x, y);
+    return;
+  }
+  const buildKey: Record<string, string> = { c: 'city', f: 'factory', m: 'silo', s: 'sam', d: 'fort', p: 'port' };
+  const btype = buildKey[k];
+  if (!btype) return;
   if (isMultiplayer()) {
     send({ type: 'action', action: { kind: 'buildB', btype, x, y } });
   } else {
