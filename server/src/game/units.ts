@@ -75,7 +75,7 @@ export function updUnits(gs: GameState) {
       if (gs.bld.find(b => b.id === tr.dstPort)?.ow === s.ow) continue;
       if (Math.hypot(tr.x - s.x, tr.y - s.y) < 16) {
         const dstPortOwner = gs.bld.find(b => b.id === tr.dstPort)?.ow ?? -1;
-        const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, gs.P[tr.ow]?.territory || 1) * Math.max(1, dstPortOwner >= 0 ? (gs.P[dstPortOwner]?.territory || 1) : 1)) / 25000);
+        const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, gs.P[tr.ow]?.territory || 1) * Math.max(1, dstPortOwner >= 0 ? (gs.P[dstPortOwner]?.territory || 1) : 1)) / 80000);
         const gold = (C.tradeBase + C.tradeDistMult * Math.pow(tr.dist || 0, 1.1) * 0.5) * sizeMult;
         if (gs.P[s.ow]?.alive) gs.P[s.ow].money += gold;
         gs.addNotif(s.ow, `🏴‍☠️ Captured trade ship! +$${Math.round(gold)}`, '#F39C12');

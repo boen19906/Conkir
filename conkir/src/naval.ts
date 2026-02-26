@@ -77,12 +77,13 @@ export function updTradeShips() {
     const s = unt[i]; if (s.ty !== 'tr') continue;
     const dstPort = bld.find(b => b.id === s.dstPort);
     if (!dstPort || dstPort.ow === s.ow) { unt.splice(i, 1); continue; }
+    if (gD(s.ow, dstPort.ow) === 'war') { unt.splice(i, 1); continue; }
     const distToPort = Math.hypot((s.tx || 0) - s.x, (s.ty2 || 0) - s.y);
     if (distToPort < 5) {
       const srcP = P[s.ow];
       const currentDstOwner = dstPort.ow;
       const dstP = P[currentDstOwner];
-      const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 25000);
+      const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 80000);
       const gold = (C.tradeBase + C.tradeDistMult * Math.pow(s.dist || 0, 1.1)) * sizeMult;
       if (srcP?.alive) srcP.money += gold;
       if (dstP?.alive && currentDstOwner !== s.ow) dstP.money += gold;
@@ -130,7 +131,7 @@ export function spShip(pi: number, clickWx: number, clickWy: number) {
   }
   if (sx === null) return false;
   p.money -= shCost;
-  unt.push({ id: nextUid(), ty: 'w', ow: pi, x: sx, y: sy!, tx: null, ty2: null, hp: 100, cd: 0, stuck: 0 });
+  unt.push({ id: nextUid(), ty: 'w', ow: pi, x: sx, y: sy!, tx: clickWx, ty2: clickWy, hp: 100, cd: 0, stuck: 0 });
   return true;
 }
 
