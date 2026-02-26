@@ -82,7 +82,7 @@ export function updTradeShips() {
       const srcP = P[s.ow];
       const currentDstOwner = dstPort.ow;
       const dstP = P[currentDstOwner];
-      const sizeMult = Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 500;
+      const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 25000);
       const gold = (C.tradeBase + C.tradeDistMult * Math.pow(s.dist || 0, 1.1)) * sizeMult;
       if (srcP?.alive) srcP.money += gold;
       if (dstP?.alive && currentDstOwner !== s.ow) dstP.money += gold;
