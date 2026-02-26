@@ -87,20 +87,26 @@ cv.addEventListener('contextmenu', e => {
     const canPort = isCoastal || hasCoast;
     const hp2 = P[hi];
     const tsc = Math.min(5, 1 + (hp2?.territory || 0) / 600);
-    const bc = (base: number) => fmt(Math.round(base * tsc));
+    const money = hp2?.money || 0;
+    const cost = (base: number) => Math.round(base * tsc);
+    const btn = (a: string, label: string, base: number, extra = '') => {
+      const c = cost(base); const dis = money < c || !!extra; return `<button data-a="${a}"${dis ? ' disabled' : ''}>` + label + (extra ? ` ${extra}` : '') + ` <span style="color:#f0c040;float:right">$${fmt(c)}</span></button>`;
+    };
     html = `<div class="ct">⚒ Build</div>
-<button data-a="city">🏙 City <span style="color:#f0c040;float:right">$${bc(C.ciC)}</span></button>
-<button data-a="factory">🏭 Factory <span style="color:#f0c040;float:right">$${bc(C.faC)}</span></button>
-<button data-a="port"${canPort ? '' : ' disabled'}>⚓ Port${canPort ? '' : ' (no coast)'} <span style="color:#f0c040;float:right">$${bc(C.poC)}</span></button>
-<button data-a="sam">🛡 SAM <span style="color:#f0c040;float:right">$${bc(C.samC)}</span></button>
-<button data-a="fort">🏰 Defense Post <span style="color:#f0c040;float:right">$${bc(C.fortC)}</span></button>
-<button data-a="silo">🚀 Missile Silo <span style="color:#f0c040;float:right">$${bc(C.siloC)}</span></button>`;
+${btn('city', '🏙 City', C.ciC)}
+${btn('factory', '🏭 Factory', C.faC)}
+${btn('port', '⚓ Port', C.poC, canPort ? '' : '(no coast)')}
+${btn('sam', '🛡 SAM', C.samC)}
+${btn('fort', '🏰 Defense Post', C.fortC)}
+${btn('silo', '🚀 Missile Silo', C.siloC)}`;
   } else if (ter[I(x, y)] === 0) {
     const hasPorts = bld.some(b => b.ow === hi && b.type === 'port');
     html = `<div class="ct">🌊 Ocean</div>`;
     if (hasPorts) {
       const _wScale = Math.min(5, 1 + (P[hi]?.territory || 0) / 600);
-      html += `<button data-a="warship">🚢 Deploy Warship <span style="color:#f0c040;float:right">$${fmt(Math.round(C.shC * _wScale))}</span></button>`;
+      const wCost = Math.round(C.shC * _wScale);
+      const canAffordShip = (P[hi]?.money || 0) >= wCost;
+      html += `<button data-a="warship"${canAffordShip ? '' : ' disabled'}>🚢 Deploy Warship <span style="color:#f0c040;float:right">$${fmt(wCost)}</span></button>`;
     } else {
       html += `<button disabled>🚢 Warship (build a Port first)</button>`;
     }
@@ -112,8 +118,9 @@ cv.addEventListener('contextmenu', e => {
       html += `<button class="pc2" data-a="peace">🕊 Propose Peace</button>`;
       if (needsNaval(hi, x, y)) html += `<button data-a="naval">🚢 Naval Invasion</button>`;
       const hasSilo = bld.some(b => b.ow === hi && b.type === 'silo');
-      html += `<button class="gd" data-a="nuke_a"${hasSilo ? '' : ' disabled'}>☢ A-Bomb${hasSilo ? '' : ' (need Silo)'} <span style="float:right">$${C.naC}</span></button>`;
-      html += `<button class="gd" data-a="nuke_h"${hasSilo ? '' : ' disabled'}>💥 H-Bomb${hasSilo ? '' : ' (need Silo)'} <span style="float:right">$${C.nhC}</span></button>`;
+      const pMoney = P[hi]?.money || 0;
+      html += `<button class="gd" data-a="nuke_a"${hasSilo && pMoney >= C.naC ? '' : ' disabled'}>☢ A-Bomb${hasSilo ? '' : ' (need Silo)'} <span style="float:right">$${C.naC}</span></button>`;
+      html += `<button class="gd" data-a="nuke_h"${hasSilo && pMoney >= C.nhC ? '' : ' disabled'}>💥 H-Bomb${hasSilo ? '' : ' (need Silo)'} <span style="float:right">$${C.nhC}</span></button>`;
     }
   } else if (o === -1 && ter[I(x, y)] > 0) {
     const naval = needsNaval(hi, x, y);
@@ -180,6 +187,12 @@ addEventListener('keydown', e => {
     if (!bld.some(b => b.ow === hi && b.type === 'silo')) return;
     if (isMultiplayer()) send({ type: 'action', action: { kind: 'doNuke', nukeType: k, tx: x, ty: y } });
     else doNuke(hi, k, x, y);
+    return;
+  }
+  if (k === 'w') {
+    if (!bld.some(b => b.ow === hi && b.type === 'port')) return;
+    if (isMultiplayer()) send({ type: 'action', action: { kind: 'spShip', wx: x, wy: y } });
+    else spShip(hi, x, y);
     return;
   }
   const buildKey: Record<string, string> = { c: 'city', f: 'factory', m: 'silo', s: 'sam', d: 'fort', p: 'port' };
