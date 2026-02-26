@@ -79,10 +79,11 @@ export function updTradeShips(gs: GameState) {
     if (!dstPort || dstPort.ow === s.ow) { gs.unt.splice(i, 1); continue; }
     const distToPort = Math.hypot((s.tx || 0) - s.x, (s.ty2 || 0) - s.y);
     if (distToPort < 5) {
-      const gold = C.tradeBase + C.tradeDistMult * Math.pow(s.dist || 0, 1.1);
       const srcP = gs.P[s.ow];
       const currentDstOwner = dstPort.ow;
       const dstP = gs.P[currentDstOwner];
+      const sizeMult = Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 500;
+      const gold = (C.tradeBase + C.tradeDistMult * Math.pow(s.dist || 0, 1.1)) * sizeMult;
       if (srcP?.alive) srcP.money += gold;
       if (dstP?.alive && currentDstOwner !== s.ow) dstP.money += gold;
       gs.addNotif(s.ow, `⚓ Trade arrived! +$${Math.round(gold)}`, '#F39C12');

@@ -59,19 +59,33 @@ export function updUnits(gs: GameState) {
       gs.bullets.push({ x: s.x, y: s.y, tx: ne.x, ty: ne.y, tid: ne.id, ow: s.ow, spd: C.bulletSpd, dmg: C.bulletDmg });
       s.cd = 18;
     }
+    const pirateRange = 50;
+    let chaseTarget: typeof gs.unt[0] | null = null, chaseDist = 1e9;
+    for (const tr of gs.unt) {
+      if (tr.ty !== 'tr' || tr.ow === s.ow) continue;
+      if (gD(gs, s.ow, tr.ow) === 'peace') continue;
+      if (gs.bld.find(b => b.id === tr.dstPort)?.ow === s.ow) continue;
+      const d = Math.hypot(tr.x - s.x, tr.y - s.y);
+      if (d < pirateRange && d < chaseDist) { chaseDist = d; chaseTarget = tr; }
+    }
     for (let ti = gs.unt.length - 1; ti >= 0; ti--) {
       const tr = gs.unt[ti];
-      if (tr.ty !== 'tr' || tr.ow === s.ow || tr.safe) continue;
+      if (tr.ty !== 'tr' || tr.ow === s.ow) continue;
       if (gD(gs, s.ow, tr.ow) === 'peace') continue;
-      if (Math.hypot(tr.x - s.x, tr.y - s.y) < 8) {
-        const gold = C.tradeBase + C.tradeDistMult * Math.pow(tr.dist || 0, 1.1) * 0.5;
+      if (gs.bld.find(b => b.id === tr.dstPort)?.ow === s.ow) continue;
+      if (Math.hypot(tr.x - s.x, tr.y - s.y) < 16) {
+        const dstPortOwner = gs.bld.find(b => b.id === tr.dstPort)?.ow ?? -1;
+        const sizeMult = Math.sqrt(Math.max(1, gs.P[tr.ow]?.territory || 1) * Math.max(1, dstPortOwner >= 0 ? (gs.P[dstPortOwner]?.territory || 1) : 1)) / 500;
+        const gold = (C.tradeBase + C.tradeDistMult * Math.pow(tr.dist || 0, 1.1) * 0.5) * sizeMult;
         if (gs.P[s.ow]?.alive) gs.P[s.ow].money += gold;
         gs.addNotif(s.ow, `🏴‍☠️ Captured trade ship! +$${Math.round(gold)}`, '#F39C12');
+        gs.addNotif(tr.ow, `🏴‍☠️ ${gs.P[s.ow]?.name} captured your trade ship! -$${Math.round(gold)}`, '#E74C3C');
         gs.unt.splice(ti, 1);
       }
     }
     let destX: number, destY: number;
     if (ne && nd < 120) { destX = ne.x; destY = ne.y; }
+    else if (chaseTarget) { destX = chaseTarget.x; destY = chaseTarget.y; }
     else {
       if (!s.tx || !isW(gs, (s.tx) | 0, (s.ty2 || 0) | 0) || Math.hypot(s.tx - s.x, (s.ty2 || 0) - s.y) < 6) {
         s.tx = null;
