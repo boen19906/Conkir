@@ -156,7 +156,7 @@ export function navInv(pi: number, tx: number, ty: number) {
       let adjEnemy = false;
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
         const nx = x + dx, ny = y + dy;
-        if (B(nx, ny) && isL(nx, ny) && own[I(nx, ny)] !== pi) { adjEnemy = true; break; }
+        if (B(nx, ny) && isL(nx, ny) && own[I(nx, ny)] !== pi && gD(pi, own[I(nx, ny)]) !== 'peace') { adjEnemy = true; break; }
       }
       if (!adjEnemy) continue;
       const d = Math.hypot(x - tx, y - ty);

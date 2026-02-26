@@ -18,7 +18,8 @@ export function updUnits() {
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
         const nx = (s.x + dx) | 0, ny = (s.y + dy) | 0;
         if (!isL(nx, ny)) continue;
-        if (own[I(nx, ny)] !== s.ow) adjEnemyLand = true;
+        const tileOwner = own[I(nx, ny)];
+        if (tileOwner !== s.ow && gD(s.ow, tileOwner) !== 'peace') adjEnemyLand = true;
       }
       const distToTarget = Math.hypot(s.x - (s.tx || 0), s.y - (s.ty2 || 0));
       const tgtOwner = own[I((s.tx || 0) | 0, (s.ty2 || 0) | 0)];
@@ -28,7 +29,8 @@ export function updUnits() {
         let lx = -1, ly = -1;
         for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) {
           const nx = (s.x + dx) | 0, ny = (s.y + dy) | 0;
-          if (isL(nx, ny) && own[I(nx, ny)] !== s.ow) { lx = nx; ly = ny; break; }
+          const tileOwner = own[I(nx, ny)];
+          if (isL(nx, ny) && tileOwner !== s.ow && gD(s.ow, tileOwner) !== 'peace') { lx = nx; ly = ny; break; }
         }
         if (lx >= 0) { own[I(lx, ly)] = s.ow; mkWave(s.ow, lx, ly, s.tr || 100, null); }
         s.hp = 0; continue;
