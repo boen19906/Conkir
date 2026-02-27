@@ -73,6 +73,7 @@ export function detonateNuke(gs: GameState, pi: number, nukeType: NukeType, tx: 
   gs.bld = gs.bld.filter(b => Math.hypot(b.x - tx, b.y - ty) > innerR);
   gs.unt = gs.unt.filter(u => Math.hypot(u.x - tx, u.y - ty) > innerR);
   gs.exp.push({ x: tx, y: ty, rad: outerR, f: 0, mx: 40 });
+  gs.nukeDisruption = Math.min(1200, gs.nukeDisruption + (nukeType === 'h' ? 600 : 300));
   const ttlHit = Array.from(tilesHit.values()).reduce((a, b) => a + b, 0);
   gs.addNotif(pi, `${nukeType === 'h' ? 'H-Bomb' : 'A-Bomb'} detonated! ${ttlHit} tiles! ☢`, '#F39C12');
 }

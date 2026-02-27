@@ -45,6 +45,7 @@ export function waterBFS(gs: GameState, sx: number, sy: number, gx: number, gy: 
 
 export function spawnTradeShips(gs: GameState) {
   if (gs.tk % C.tradeSpawnInterval !== 0) return;
+  if (gs.nukeDisruption > 0 && Math.random() < Math.min(0.6, gs.nukeDisruption / 2000)) return;
   const ports = gs.bld.filter(b => b.type === 'port');
   for (const srcPort of ports) {
     const srcPi = srcPort.ow;
@@ -83,7 +84,7 @@ export function updTradeShips(gs: GameState) {
       const srcP = gs.P[s.ow];
       const currentDstOwner = dstPort.ow;
       const dstP = gs.P[currentDstOwner];
-      const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 80000);
+      const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 50000);
       const gold = (C.tradeBase + C.tradeDistMult * Math.pow(s.dist || 0, 1.1)) * sizeMult;
       if (srcP?.alive) srcP.money += gold;
       if (dstP?.alive && currentDstOwner !== s.ow) dstP.money += gold;

@@ -2,7 +2,7 @@ import {
   P, bld, unt, wav, exp, notifs,
   setExp, setBld, setUnt, setWav, setNotifs,
   incTk, tk, victoryShown, setVictoryShown, onVictory,
-  betrayalDebuff
+  betrayalDebuff, decayNukeDisruption
 } from './state';
 import { C } from './constants';
 import { cntT } from './buildings';
@@ -18,6 +18,7 @@ export function gameTick() {
   procMissiles();
   setNotifs(notifs.filter(n => { n.ttl--; return n.ttl > 0; }));
   if (tk % 50 === 0) decayConflict();
+  decayNukeDisruption();
   for (const [pi, tks] of betrayalDebuff) {
     if (tks <= 1) betrayalDebuff.delete(pi);
     else betrayalDebuff.set(pi, tks - 1);

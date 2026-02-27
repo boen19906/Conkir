@@ -4,6 +4,15 @@ import { isW, isL, B, I } from './mapgen';
 import { gD } from './diplomacy';
 import { mkWave } from './waves';
 
+function hasLOS(x1: number, y1: number, x2: number, y2: number): boolean {
+  const dx = x2 - x1, dy = y2 - y1;
+  const steps = Math.ceil(Math.hypot(dx, dy));
+  for (let i = 1; i < steps; i++) {
+    if (isL((x1 + dx * i / steps) | 0, (y1 + dy * i / steps) | 0)) return false;
+  }
+  return true;
+}
+
 export function isDeepW(x: number, y: number) {
   if (!isW(x, y)) return false;
   for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) if (isL(x + dx, y + dy)) return false;
@@ -55,7 +64,7 @@ export function updUnits() {
       if (o.ty === 'tr') continue;
       if (gD(s.ow, o.ow) === 'peace') continue;
       const d = Math.hypot(o.x - s.x, o.y - s.y);
-      if (d < nd) { nd = d; ne = o; }
+      if (d < nd && hasLOS(s.x, s.y, o.x, o.y)) { nd = d; ne = o; }
     }
     if (ne && nd < C.bulletRange && s.cd! <= 0) {
       bullets.push({ x: s.x, y: s.y, tx: ne.x, ty: ne.y, tid: ne.id, ow: s.ow, spd: C.bulletSpd, dmg: C.bulletDmg });
@@ -77,7 +86,7 @@ export function updUnits() {
       if (bld.find(b => b.id === tr.dstPort)?.ow === s.ow) continue;
       if (Math.hypot(tr.x - s.x, tr.y - s.y) < 16) {
         const dstPortOwner = bld.find(b => b.id === tr.dstPort)?.ow ?? -1;
-        const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, P[tr.ow]?.territory || 1) * Math.max(1, dstPortOwner >= 0 ? (P[dstPortOwner]?.territory || 1) : 1)) / 80000);
+        const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, P[tr.ow]?.territory || 1) * Math.max(1, dstPortOwner >= 0 ? (P[dstPortOwner]?.territory || 1) : 1)) / 50000);
         const gold = (C.tradeBase + C.tradeDistMult * Math.pow(tr.dist || 0, 1.1) * 0.5) * sizeMult;
         if (P[s.ow]?.alive) P[s.ow].money += gold;
         addNotif(s.ow, `🏴‍☠️ Captured trade ship! +$${Math.round(gold)}`, '#F39C12');

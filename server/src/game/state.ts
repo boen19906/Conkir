@@ -20,6 +20,8 @@ export class GameState {
   notifs: Notif[] = [];
   pendingNotifs: Notif[] = [];
 
+  nukeDisruption: number = 0;
+
   tk: number = 0;
   nwid: number = 0;
   nuid: number = 0;
@@ -80,5 +82,6 @@ export class GameState {
     this.run = false; this.gOv = false; this.victoryShown = false;
     this.underAttack = false; this.lastAttackNotif = 0;
     this.atkRatio = new Map();
+    this.nukeDisruption = 0;
   }
 }

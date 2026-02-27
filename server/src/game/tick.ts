@@ -13,6 +13,7 @@ export function gameTick(gs: GameState) {
   procMissiles(gs);
   gs.notifs = gs.notifs.filter(n => { n.ttl--; return n.ttl > 0; });
   if (gs.tk % 50 === 0) decayConflict(gs);
+  if (gs.nukeDisruption > 0) gs.nukeDisruption = Math.max(0, gs.nukeDisruption - 1);
   for (const [pi, tks] of gs.betrayalDebuff) {
     if (tks <= 1) gs.betrayalDebuff.delete(pi);
     else gs.betrayalDebuff.set(pi, tks - 1);

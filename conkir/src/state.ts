@@ -19,6 +19,10 @@ export let notifs: Notif[] = [];
 export let botProposals: Array<{ from: number; name: string; color: number; addedAt: number }> = [];
 export let selectedWarshipId: number = -1;
 
+export let nukeDisruption: number = 0;
+export function addNukeDisruption(v: number) { nukeDisruption = Math.min(1200, nukeDisruption + v); }
+export function decayNukeDisruption() { if (nukeDisruption > 0) nukeDisruption = Math.max(0, nukeDisruption - 1); }
+
 export let tk: number = 0;
 export let nwid: number = 0;
 export let nuid: number = 0;

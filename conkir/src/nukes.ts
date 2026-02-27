@@ -1,4 +1,4 @@
-import { P, bld, unt, missiles, exp, own, ter, setBld, setUnt, addNotif, nextMid } from './state';
+import { P, bld, unt, missiles, exp, own, ter, setBld, setUnt, addNotif, nextMid, addNukeDisruption } from './state';
 import { C } from './constants';
 import { B, I } from './mapgen';
 import type { NukeType } from './types';
@@ -73,6 +73,7 @@ export function detonateNuke(pi: number, nukeType: NukeType, tx: number, ty: num
   setBld(bld.filter(b => Math.hypot(b.x - tx, b.y - ty) > innerR));
   setUnt(unt.filter(u => Math.hypot(u.x - tx, u.y - ty) > innerR));
   exp.push({ x: tx, y: ty, rad: outerR, f: 0, mx: 40 });
+  addNukeDisruption(nukeType === 'h' ? 600 : 300);
   const ttlHit = Array.from(tilesHit.values()).reduce((a, b) => a + b, 0);
   addNotif(pi, `${nukeType === 'h' ? 'H-Bomb' : 'A-Bomb'} detonated! ${ttlHit} tiles! ☢`, '#F39C12');
 }

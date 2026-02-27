@@ -1,4 +1,4 @@
-import { P, bld, unt, own, ter, addNotif, nextUid, nextTid, atkRatio, tk } from './state';
+import { P, bld, unt, own, ter, addNotif, nextUid, nextTid, atkRatio, tk, nukeDisruption } from './state';
 import { C, W, H } from './constants';
 import { isW, isL, isCo, B, I } from './mapgen';
 import { gD } from './diplomacy';
@@ -45,6 +45,7 @@ export function waterBFS(sx: number, sy: number, gx: number, gy: number): number
 
 export function spawnTradeShips() {
   if (tk % C.tradeSpawnInterval !== 0) return;
+  if (nukeDisruption > 0 && Math.random() < Math.min(0.6, nukeDisruption / 2000)) return;
   const ports = bld.filter(b => b.type === 'port');
   for (const srcPort of ports) {
     const srcPi = srcPort.ow;
@@ -83,7 +84,7 @@ export function updTradeShips() {
       const srcP = P[s.ow];
       const currentDstOwner = dstPort.ow;
       const dstP = P[currentDstOwner];
-      const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 80000);
+      const sizeMult = Math.max(0.25, Math.sqrt(Math.max(1, srcP?.territory || 1) * Math.max(1, dstP?.territory || 1)) / 50000);
       const gold = (C.tradeBase + C.tradeDistMult * Math.pow(s.dist || 0, 1.1)) * sizeMult;
       if (srcP?.alive) srcP.money += gold;
       if (dstP?.alive && currentDstOwner !== s.ow) dstP.money += gold;
