@@ -1,6 +1,7 @@
 import { P, bld, unt, wav, missiles, exp, own, ter, setBld, setUnt, addNotif, nextMid, addNukeDisruption } from './state';
 import { C } from './constants';
 import { B, I } from './mapgen';
+import { addConflict } from './diplomacy';
 import type { NukeType } from './types';
 
 export function doNuke(pi: number, nukeType: NukeType, targetX: number, targetY: number) {
@@ -70,6 +71,7 @@ export function detonateNuke(pi: number, nukeType: NukeType, tx: number, ty: num
     p.maxTroops = Math.max(0, p.maxTroops - killed * C.mtT);
     addNotif(pid, `☢ Nuclear strike! Lost ${Math.round(troopsKilled)} troops!`, '#FF4500');
   }
+  for (const [pid, killed] of tilesHit) { if (pid !== pi) addConflict(pid, pi, killed); }
   setBld(bld.filter(b => Math.hypot(b.x - tx, b.y - ty) > innerR));
   setUnt(unt.filter(u => Math.hypot(u.x - tx, u.y - ty) > innerR));
   exp.push({ x: tx, y: ty, rad: outerR, f: 0, mx: 40 });

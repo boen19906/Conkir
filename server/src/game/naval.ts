@@ -1,7 +1,7 @@
 import type { GameState } from './state';
 import { C, W, H } from './constants';
 import { isW, isL, isCo, B, I } from './mapgen';
-import { gD } from './diplomacy';
+import { gD, getConflictKey } from './diplomacy';
 
 export function waterBFS(gs: GameState, sx: number, sy: number, gx: number, gy: number): number[] | null {
   if (!isW(gs, sx, sy)) {
@@ -52,6 +52,7 @@ export function spawnTradeShips(gs: GameState) {
     const destCandidates = ports.filter(p => {
       if (p.ow === srcPi) return false;
       if (gD(gs, srcPi, p.ow) === 'war') return false;
+      if ((gs.conflictIntensity.get(getConflictKey(srcPi, p.ow)) || 0) > 0) return false;
       if (gs.unt.some(u => u.ty === 'tr' && u.srcPort === srcPort.id && u.dstPort === p.id)) return false;
       return true;
     });
@@ -79,6 +80,7 @@ export function updTradeShips(gs: GameState) {
     const dstPort = gs.bld.find(b => b.id === s.dstPort);
     if (!dstPort || dstPort.ow === s.ow) { gs.unt.splice(i, 1); continue; }
     if (gD(gs, s.ow, dstPort.ow) === 'war') { gs.unt.splice(i, 1); continue; }
+    if ((gs.conflictIntensity.get(getConflictKey(s.ow, dstPort.ow)) || 0) > 0) { gs.unt.splice(i, 1); continue; }
     const distToPort = Math.hypot((s.tx || 0) - s.x, (s.ty2 || 0) - s.y);
     if (distToPort < 5) {
       const srcP = gs.P[s.ow];

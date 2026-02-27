@@ -32,7 +32,8 @@ export function updUnits() {
       }
       const distToTarget = Math.hypot(s.x - (s.tx || 0), s.y - (s.ty2 || 0));
       const tgtOwner = own[I((s.tx || 0) | 0, (s.ty2 || 0) | 0)];
-      if (distToTarget < 15 && tgtOwner === s.ow) { P[s.ow].troops += s.tr || 0; s.hp = 0; continue; }
+      const tgtFriendly = tgtOwner === s.ow || (tgtOwner >= 0 && gD(s.ow, tgtOwner) === 'peace');
+      if (distToTarget < 15 && tgtFriendly) { P[s.ow].troops += s.tr || 0; s.hp = 0; continue; }
       const nearDest = distToTarget < 30;
       if (adjEnemyLand && nearDest) {
         let lx = -1, ly = -1;
