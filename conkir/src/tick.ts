@@ -1,5 +1,5 @@
 import {
-  P, bld, unt, wav, exp, notifs,
+  P, bld, unt, wav, exp, notifs, own,
   setExp, setBld, setUnt, setWav, setNotifs,
   incTk, tk, victoryShown, setVictoryShown, onVictory,
   betrayalDebuff, decayNukeDisruption
@@ -54,6 +54,7 @@ export function gameTick() {
       setBld(bld.filter(b => b.ow !== p.id));
       setUnt(unt.filter(u => u.ow !== p.id));
       setWav(wav.filter(w => w.pi !== p.id));
+      for (let i = 0; i < own.length; i++) { if (own[i] === p.id) own[i] = -1; }
     }
     if (!victoryShown) {
       const totalClaimed = P.reduce((s, p) => s + (p.alive ? p.territory : 0), 0) || 1;

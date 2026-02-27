@@ -73,6 +73,21 @@ export function detonateNuke(gs: GameState, pi: number, nukeType: NukeType, tx: 
   gs.bld = gs.bld.filter(b => Math.hypot(b.x - tx, b.y - ty) > innerR);
   gs.unt = gs.unt.filter(u => Math.hypot(u.x - tx, u.y - ty) > innerR);
   gs.exp.push({ x: tx, y: ty, rad: outerR, f: 0, mx: 40 });
+  for (const w of gs.wav) {
+    if (w.pi === pi) continue;
+    let hitWeight = 0;
+    for (let wy = -outerR; wy <= outerR; wy++) for (let wx = -outerR; wx <= outerR; wx++) {
+      const d2 = wx * wx + wy * wy; if (d2 > r2o) continue;
+      const ni = I(tx + wx, ty + wy);
+      if (w.inHeap.has(ni)) hitWeight += d2 <= r2i ? 1.0 : 0.4;
+    }
+    if (hitWeight < 1) continue;
+    const frontierPct = Math.min(1, hitWeight / Math.max(1, w.inHeap.size));
+    const wMult = nukeType === 'h' ? 3.0 : 2.0;
+    const troopsLost = Math.min(w.troops, w.troops * frontierPct * wMult);
+    w.troops = Math.max(0, w.troops - troopsLost);
+    gs.addNotif(w.pi, `☢ Nuclear blast devastated your advancing troops! -${Math.round(troopsLost)}`, '#FF4500');
+  }
   gs.nukeDisruption = Math.min(1200, gs.nukeDisruption + (nukeType === 'h' ? 600 : 300));
   const ttlHit = Array.from(tilesHit.values()).reduce((a, b) => a + b, 0);
   gs.addNotif(pi, `${nukeType === 'h' ? 'H-Bomb' : 'A-Bomb'} detonated! ${ttlHit} tiles! ☢`, '#F39C12');
