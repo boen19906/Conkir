@@ -30,6 +30,7 @@ export let nbid: number = 0;
 export let nmid: number = 0;
 export let ntid: number = 0;
 export let atkRatio: number = 0.20;
+export let workerRatio: number = 0.20;
 export let run: boolean = false;
 export let gOv: boolean = false;
 export let victoryShown: boolean = false;
@@ -60,6 +61,7 @@ export function setGOv(v: boolean) { gOv = v; }
 export function setVictoryShown(v: boolean) { victoryShown = v; }
 export function setUnderAttack(v: boolean) { underAttack = v; }
 export function setAtkRatio(v: number) { atkRatio = v; }
+export function setWorkerRatio(v: number) { workerRatio = v; }
 
 // ID counters — return old value and increment (like nwid++)
 export function nextWid() { return nwid++; }

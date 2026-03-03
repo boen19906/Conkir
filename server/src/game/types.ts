@@ -10,6 +10,7 @@ export interface Player {
   color: number;
   troops: number;
   maxTroops: number;
+  population: number;
   money: number;
   hu: boolean;
   alive: boolean;

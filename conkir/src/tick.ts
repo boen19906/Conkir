@@ -2,7 +2,7 @@ import {
   P, bld, unt, wav, exp, notifs, own,
   setExp, setBld, setUnt, setWav, setNotifs,
   incTk, tk, victoryShown, setVictoryShown, onVictory,
-  betrayalDebuff, decayNukeDisruption
+  betrayalDebuff, decayNukeDisruption, workerRatio
 } from './state';
 import { C } from './constants';
 import { cntT } from './buildings';
@@ -28,7 +28,9 @@ export function gameTick() {
       if (!p.alive) continue;
       p.territory = cntT(p.id);
       const ci = bld.filter(b => b.ow === p.id && b.type === 'city');
-      p.maxTroops = p.territory * C.mtT + ci.length * C.ciB;
+      const wr = p.hu ? workerRatio : 0.20;
+      p.population = p.territory * C.mtT + ci.length * C.ciB;
+      p.maxTroops = p.population * (1 - wr);
       p.troops = Math.min(p.troops, p.maxTroops);
       const pop = p.troops, mx = p.maxTroops || 1;
       const r = Math.max(pop / mx, 0.001);
@@ -36,7 +38,7 @@ export function gameTick() {
       p.growth = g;
       p.troops = Math.min(p.troops + g, p.maxTroops);
       const fa = bld.filter(b => b.ow === p.id && b.type === 'factory');
-      p.income = fa.length * C.faI + p.territory * 0.05;
+      p.income = (fa.length * C.faI + p.territory * 0.05) * (wr / 0.2);
       p.money += p.income;
     }
   }

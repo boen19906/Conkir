@@ -90,6 +90,7 @@ export function applyGameStart(msg: MsgGameStarting) {
     color: msg.playerColors[i] ?? playerColor(i),
     troops: 50,
     maxTroops: 200,
+    population: 200,
     money: 2000,
     hu: i === msg.yourPlayerIndex,
     alive: true,
@@ -117,6 +118,7 @@ function applyTick(msg: MsgTick) {
     if (p) {
       p.troops = ps.troops;
       p.maxTroops = ps.maxTroops;
+      p.population = ps.population;
       p.money = ps.money;
       p.territory = ps.territory;
       p.growth = ps.growth;

@@ -16,7 +16,7 @@ export function fmt(n: number) {
 export function updUI() {
   const h = P.find(p => p.hu);
   if (!h) return;
-  (document.getElementById('hTr') as HTMLElement).textContent = `${fmt(h.troops)} / ${fmt(h.maxTroops)}`;
+  (document.getElementById('hTr') as HTMLElement).textContent = fmt(h.population);
   (document.getElementById('hMo') as HTMLElement).textContent = `$${fmt(h.money)}`;
   const _tc = P.reduce((s, p) => s + (p.alive ? p.territory : 0), 0) || 1;
   (document.getElementById('hTe') as HTMLElement).textContent = `${(h.territory / _tc * 100).toFixed(1)}%`;

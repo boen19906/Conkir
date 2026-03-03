@@ -50,6 +50,11 @@ export interface MsgRatioChange {
   value: number;
 }
 
+export interface MsgWorkerRatioChange {
+  type: 'workerRatioChange';
+  value: number;
+}
+
 export interface MsgPing {
   type: 'ping';
   ts: number;
@@ -63,6 +68,7 @@ export type ClientMessage =
   | MsgSpawn
   | MsgAction
   | MsgRatioChange
+  | MsgWorkerRatioChange
   | MsgPing;
 
 // ============================================================
@@ -134,6 +140,7 @@ export interface WireDelta_Player {
   id: number;
   troops: number;
   maxTroops: number;
+  population: number;
   money: number;
   territory: number;
   growth: number;

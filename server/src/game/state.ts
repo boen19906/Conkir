@@ -36,6 +36,8 @@ export class GameState {
 
   // Per-player attack ratio (bots default 0.20)
   atkRatio: Map<number, number> = new Map();
+  // Per-player worker ratio (bots default 0.20)
+  workerRatio: Map<number, number> = new Map();
 
   // Delta tracking: snapshot of own for diffing
   prevOwn: Int16Array = new Int16Array(W * H).fill(-2);
@@ -68,6 +70,10 @@ export class GameState {
     return this.atkRatio.get(pi) ?? 0.20;
   }
 
+  getWorkerRatio(pi: number): number {
+    return this.workerRatio.get(pi) ?? 0.20;
+  }
+
   reset() {
     this.ter = new Uint8Array(W * H);
     this.own = new Int16Array(W * H).fill(-2);
@@ -82,6 +88,7 @@ export class GameState {
     this.run = false; this.gOv = false; this.victoryShown = false;
     this.underAttack = false; this.lastAttackNotif = 0;
     this.atkRatio = new Map();
+    this.workerRatio = new Map();
     this.nukeDisruption = 0;
   }
 }

@@ -2,7 +2,7 @@ import './style.css';
 import './input'; // registers all event listeners
 import { beginSpawnPhase, beginMultiplayerSpawnPhase, launchMultiplayerGame, updateMpSpawnInfo } from './init';
 import { W, H } from './constants';
-import { setTer, setOwn, setAtkRatio, setBotProposals, botProposals, P } from './state';
+import { setTer, setOwn, setAtkRatio, setWorkerRatio, setBotProposals, botProposals, P } from './state';
 import { sD } from './diplomacy';
 import { connect, send, onMsg, applyGameStart, isMultiplayer, getMyPlayerIndex } from './network';
 
@@ -74,6 +74,12 @@ document.addEventListener('input', e => {
     setAtkRatio(val);
     (document.getElementById('ratioVal') as HTMLElement).textContent = target.value + '%';
     if (isMultiplayer()) send({ type: 'ratioChange', value: val });
+  }
+  if (target.id === 'workerSlider') {
+    const val = parseInt(target.value) / 100;
+    setWorkerRatio(val);
+    (document.getElementById('workerVal') as HTMLElement).textContent = target.value + '%';
+    if (isMultiplayer()) send({ type: 'workerRatioChange', value: val });
   }
 });
 

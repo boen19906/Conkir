@@ -230,6 +230,7 @@ export class GameRoom {
       color: playerColor(i),
       troops: 50,
       maxTroops: 200,
+      population: 200,
       money: 2000,
       hu: true,
       alive: true,
@@ -285,6 +286,7 @@ export class GameRoom {
         color: playerColor(bi),
         troops: 50,
         maxTroops: 200,
+        population: 200,
         money: 2000,
         hu: false,
         alive: true,
@@ -368,6 +370,7 @@ export class GameRoom {
         id: p.id,
         troops: p.troops,
         maxTroops: p.maxTroops,
+        population: p.population,
         money: p.money,
         territory: p.territory,
         growth: p.growth,
@@ -433,6 +436,11 @@ export class GameRoom {
 
     if (msg.type === 'ratioChange') {
       this.gs.atkRatio.set(pi, Math.max(0.05, Math.min(1.0, msg.value)));
+      return;
+    }
+
+    if (msg.type === 'workerRatioChange') {
+      this.gs.workerRatio.set(pi, Math.max(0, Math.min(0.95, msg.value)));
       return;
     }
 

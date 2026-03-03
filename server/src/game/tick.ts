@@ -23,7 +23,9 @@ export function gameTick(gs: GameState) {
       if (!p.alive) continue;
       p.territory = cntT(gs, p.id);
       const ci = gs.bld.filter(b => b.ow === p.id && b.type === 'city');
-      p.maxTroops = p.territory * C.mtT + ci.length * C.ciB;
+      const wr = gs.getWorkerRatio(p.id);
+      p.population = p.territory * C.mtT + ci.length * C.ciB;
+      p.maxTroops = p.population * (1 - wr);
       p.troops = Math.min(p.troops, p.maxTroops);
       const pop = p.troops, mx = p.maxTroops || 1;
       const r = Math.max(pop / mx, 0.001);
@@ -31,7 +33,7 @@ export function gameTick(gs: GameState) {
       p.growth = g;
       p.troops = Math.min(p.troops + g, p.maxTroops);
       const fa = gs.bld.filter(b => b.ow === p.id && b.type === 'factory');
-      p.income = fa.length * C.faI + p.territory * 0.05;
+      p.income = (fa.length * C.faI + p.territory * 0.05) * (wr / 0.2);
       p.money += p.income;
     }
   }

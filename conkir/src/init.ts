@@ -75,7 +75,7 @@ function multiplayerLoop() {
 
 export function addP(nm: string, sx: number, sy: number, hu: boolean, df: number) {
   const i = P.length;
-  P.push({ id: i, name: nm, color: playerColor(i), troops: 50, maxTroops: 200, money: 2000, hu, alive: true, df, territory: 0, growth: 0, income: 0 });
+  P.push({ id: i, name: nm, color: playerColor(i), troops: 50, maxTroops: 200, population: 200, money: 2000, hu, alive: true, df, territory: 0, growth: 0, income: 0 });
   const r = 10;
   for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++)
     if (dx * dx + dy * dy <= r * r && isL(sx + dx, sy + dy)) own[I(sx + dx, sy + dy)] = i;
@@ -174,6 +174,7 @@ export function launchGame(spawnX: number, spawnY: number) {
   (document.getElementById('plist') as HTMLElement).style.display = 'block';
   setRun(true); setGOv(false); lt = performance.now(); acc = 0;
   (document.getElementById('ratioBar') as HTMLElement).style.display = 'flex';
+  (document.getElementById('workerBar') as HTMLElement).style.display = 'flex';
   // Register solo victory overlay handler
   setOnVictory((p) => {
     const totalClaimed = P.reduce((s, pp) => s + (pp.alive ? pp.territory : 0), 0) || 1;
@@ -300,6 +301,7 @@ export function launchMultiplayerGame(spawnX: number, spawnY: number) {
   (document.getElementById('hud') as HTMLElement).style.display = 'flex';
   (document.getElementById('plist') as HTMLElement).style.display = 'block';
   (document.getElementById('ratioBar') as HTMLElement).style.display = 'flex';
+  (document.getElementById('workerBar') as HTMLElement).style.display = 'flex';
   if (spawnX > 0 || spawnY > 0) { setCam(spawnX, spawnY); setZm(3.5); }
   _mpRunning = true;
   requestAnimationFrame(multiplayerLoop);
