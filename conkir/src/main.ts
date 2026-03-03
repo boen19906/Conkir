@@ -74,12 +74,14 @@ document.addEventListener('input', e => {
     setAtkRatio(val);
     (document.getElementById('ratioVal') as HTMLElement).textContent = target.value + '%';
     if (isMultiplayer()) send({ type: 'ratioChange', value: val });
+    target.blur();
   }
   if (target.id === 'workerSlider') {
     const val = parseInt(target.value) / 100;
     setWorkerRatio(val);
     (document.getElementById('workerVal') as HTMLElement).textContent = target.value + '%';
     if (isMultiplayer()) send({ type: 'workerRatioChange', value: val });
+    target.blur();
   }
 });
 
