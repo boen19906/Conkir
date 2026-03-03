@@ -26,8 +26,7 @@ export function buildB(gs: GameState, pi: number, ty: string, x: number, y: numb
     if (!found) { gs.addNotif(pi, 'Must build on your own territory!', '#E74C3C'); return false; }
   }
   const baseC = ty === 'city' ? C.ciC : ty === 'factory' ? C.faC : ty === 'port' ? C.poC : ty === 'silo' ? C.siloC : ty === 'fort' ? C.fortC : C.samC;
-  const terScale = Math.min(5, 1 + p.territory / 600);
-  const cost = Math.round(baseC * terScale);
+  const cost = baseC;
   if (p.money < cost) { gs.addNotif(pi, `Need $${fmt(cost)} to build ${ty} (have $${fmt(p.money | 0)})`, '#E74C3C'); return false; }
   let bx = x, by = y;
   if (ty === 'port') {

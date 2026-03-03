@@ -86,9 +86,8 @@ cv.addEventListener('contextmenu', e => {
     if (!isCoastal) { for (let y2 = 0; y2 < H && !hasCoast; y2 += 4) for (let x2 = 0; x2 < W && !hasCoast; x2 += 4) if (own[I(x2, y2)] === hi && isCo(x2, y2)) hasCoast = true; }
     const canPort = isCoastal || hasCoast;
     const hp2 = P[hi];
-    const tsc = Math.min(5, 1 + (hp2?.territory || 0) / 600);
     const money = hp2?.money || 0;
-    const cost = (base: number) => Math.round(base * tsc);
+    const cost = (base: number) => base;
     const btn = (a: string, label: string, base: number, extra = '') => {
       const c = cost(base); const dis = money < c || !!extra; return `<button data-a="${a}"${dis ? ' disabled' : ''}>` + label + (extra ? ` ${extra}` : '') + ` <span style="color:#f0c040;float:right">$${fmt(c)}</span></button>`;
     };

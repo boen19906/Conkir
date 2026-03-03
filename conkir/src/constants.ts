@@ -51,7 +51,7 @@ export const C = {
   naR: 20, nhR: 45,
   naRo: 45, nhRo: 90,
   naSp: 2.5,
-  samC: 30000, samRange: 35, samCooldown: 70,
+  samC: 50000, samRange: 35, samCooldown: 70,
   siloC: 6000,
   fortC: 3500, fortRange: 30, fortMult: 4.0,
   ciC: 25000, faC: 3000, poC: 25000,
