@@ -30,13 +30,14 @@ export function gameTick() {
       const ci = bld.filter(b => b.ow === p.id && b.type === 'city');
       const wr = p.hu ? workerRatio : 0.20;
       p.population = p.territory * C.mtT + ci.length * C.ciB;
+      const oldMaxTroops = p.maxTroops;
       p.maxTroops = p.population * (1 - wr);
       p.workers = Math.round(p.population * wr);
-      // Gradual troop demobilisation: bleed off 20% of excess per update
-      if (p.troops > p.maxTroops) {
-        const excess = p.troops - p.maxTroops;
-        p.troops = Math.max(p.maxTroops, p.troops - excess * 0.20);
+      // When maxTroops shrinks (worker ratio rose), scale troops down proportionally
+      if (p.maxTroops < oldMaxTroops && oldMaxTroops > 0) {
+        p.troops = p.troops * (p.maxTroops / oldMaxTroops);
       }
+      p.troops = Math.min(p.troops, p.maxTroops);
       const pop = p.troops, mx = p.maxTroops || 1;
       const r = Math.max(pop / mx, 0.001);
       const g = Math.max(0, 1.5 * Math.pow(mx, 0.6) * Math.pow(r, 0.3) * (1 - r));
