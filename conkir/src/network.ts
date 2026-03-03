@@ -118,6 +118,7 @@ function applyTick(msg: MsgTick) {
     if (p) {
       p.troops = ps.troops;
       p.maxTroops = ps.maxTroops;
+      p.workers = ps.workers;
       p.population = ps.population;
       p.money = ps.money;
       p.territory = ps.territory;

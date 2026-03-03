@@ -140,6 +140,7 @@ export interface WireDelta_Player {
   id: number;
   troops: number;
   maxTroops: number;
+  workers: number;
   population: number;
   money: number;
   territory: number;

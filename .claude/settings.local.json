@@ -10,7 +10,8 @@
       "Bash(test:*)",
       "Bash(npx tsc:*)",
       "Bash(cd:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

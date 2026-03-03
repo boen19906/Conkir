@@ -26,7 +26,12 @@ export function gameTick(gs: GameState) {
       const wr = gs.getWorkerRatio(p.id);
       p.population = p.territory * C.mtT + ci.length * C.ciB;
       p.maxTroops = p.population * (1 - wr);
-      p.troops = Math.min(p.troops, p.maxTroops);
+      p.workers = Math.round(p.population * wr);
+      // Gradual troop demobilisation: bleed off 20% of excess per update
+      if (p.troops > p.maxTroops) {
+        const excess = p.troops - p.maxTroops;
+        p.troops = Math.max(p.maxTroops, p.troops - excess * 0.20);
+      }
       const pop = p.troops, mx = p.maxTroops || 1;
       const r = Math.max(pop / mx, 0.001);
       const g = Math.max(0, 1.5 * Math.pow(mx, 0.6) * Math.pow(r, 0.3) * (1 - r));

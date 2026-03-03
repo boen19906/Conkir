@@ -93,12 +93,12 @@ export function render() {
     ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillText(lb.name, lb.x + 1, lb.y + 1);
     ctx.fillStyle = '#' + lb.color.toString(16).padStart(6, '0');
     ctx.fillText(lb.name, lb.x, lb.y);
-    // Troop count below name
-    const troops = P[lb.id]?.troops;
-    if (troops !== undefined) {
+    // Troop + worker counts below name
+    const pp = P[lb.id];
+    if (pp) {
       const tfs = Math.max(4, fs * 0.7);
       ctx.font = `${tfs}px Rajdhani,sans-serif`;
-      const troopStr = fmtTr(troops) + ' ⚔';
+      const troopStr = fmtTr(pp.troops) + ' ⚔';
       ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillText(troopStr, lb.x + 1, lb.y + fs + 1);
       ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillText(troopStr, lb.x, lb.y + fs);
     }

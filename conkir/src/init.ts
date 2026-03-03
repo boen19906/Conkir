@@ -75,7 +75,7 @@ function multiplayerLoop() {
 
 export function addP(nm: string, sx: number, sy: number, hu: boolean, df: number) {
   const i = P.length;
-  P.push({ id: i, name: nm, color: playerColor(i), troops: 50, maxTroops: 200, population: 200, money: 2000, hu, alive: true, df, territory: 0, growth: 0, income: 0 });
+  P.push({ id: i, name: nm, color: playerColor(i), troops: 50, maxTroops: 200, workers: 0, population: 200, money: 2000, hu, alive: true, df, territory: 0, growth: 0, income: 0 });
   const r = 10;
   for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++)
     if (dx * dx + dy * dy <= r * r && isL(sx + dx, sy + dy)) own[I(sx + dx, sy + dy)] = i;
