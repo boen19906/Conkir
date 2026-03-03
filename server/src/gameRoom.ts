@@ -109,18 +109,21 @@ export class GameRoom {
     slot.ws = newWs;
     slot.connected = true;
     if (this.phase === 'running') {
-      // Resend full state
+      // Resend full state — include bots so client P array matches server's
       const ownBytes = new Uint8Array(this.gs.own.buffer);
+      const playerNames = [...this.slots.map(s => s.name), ...this.botNames];
+      const playerColors = playerNames.map((_, i) => playerColor(i));
       this.send(newWs, {
         type: 'gameStarting',
         seed: this.seed,
         terB64: Buffer.from(this.gs.ter.buffer).toString('base64'),
         ownB64: Buffer.from(ownBytes).toString('base64'),
         yourPlayerIndex: slot.playerIndex,
-        playerNames: this.slots.map(s => s.name),
-        playerColors: this.slots.map((_, i) => playerColor(i)),
+        playerNames,
+        playerColors,
         botSpawns: [],
-        spawnTimeoutMs: 0
+        spawnTimeoutMs: 0,
+        reconnectSpawn: slot.spawnChosen ? { x: slot.spawnX, y: slot.spawnY } : undefined
       });
     }
     return true;

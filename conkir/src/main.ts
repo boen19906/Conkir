@@ -246,10 +246,16 @@ onMsg('gameStarting', (msg) => {
   requestAnimationFrame(() => requestAnimationFrame(() => {
     applyGameStart(msg);
     (document.getElementById('loadingScreen') as HTMLElement).style.display = 'none';
-    beginMultiplayerSpawnPhase(msg, (x, y) => {
-      _mpMySpawn = { x, y };
-      send({ type: 'spawn', x, y });
-    });
+    if (msg.reconnectSpawn) {
+      // Reconnect: skip spawn phase, launch directly from saved spawn position
+      _mpMySpawn = msg.reconnectSpawn;
+      launchMpIfReady();
+    } else {
+      beginMultiplayerSpawnPhase(msg, (x, y) => {
+        _mpMySpawn = { x, y };
+        send({ type: 'spawn', x, y });
+      });
+    }
   }));
 });
 

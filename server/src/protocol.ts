@@ -116,6 +116,7 @@ export interface MsgGameStarting {
   playerColors: number[];
   botSpawns: Array<{ x: number; y: number }>;
   spawnTimeoutMs: number;
+  reconnectSpawn?: { x: number; y: number };
 }
 
 export interface SpawnPoint {

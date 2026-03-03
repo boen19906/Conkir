@@ -90,6 +90,7 @@ export function applyGameStart(msg: MsgGameStarting) {
     color: msg.playerColors[i] ?? playerColor(i),
     troops: 50,
     maxTroops: 200,
+    workers: 0,
     population: 200,
     money: 2000,
     hu: i === msg.yourPlayerIndex,
