@@ -7,6 +7,8 @@ import { spawnTradeShips, updTradeShips } from './naval';
 import { updUnits, updBullets } from './units';
 import { decayConflict } from './diplomacy';
 
+const _prevWr = new Map<number, number>();
+
 export function gameTick(gs: GameState) {
   gs.tk++;
   procWaves(gs);
@@ -25,13 +27,14 @@ export function gameTick(gs: GameState) {
       const ci = gs.bld.filter(b => b.ow === p.id && b.type === 'city');
       const wr = gs.getWorkerRatio(p.id);
       p.population = p.territory * C.mtT + ci.length * C.ciB;
-      const oldMaxTroops = p.maxTroops;
       p.maxTroops = p.population * (1 - wr);
       p.workers = Math.round(p.population * wr);
-      // When maxTroops shrinks (worker ratio rose), scale troops down proportionally
-      if (p.maxTroops < oldMaxTroops && oldMaxTroops > 0) {
-        p.troops = p.troops * (p.maxTroops / oldMaxTroops);
+      // When worker ratio rises, demobilise troops proportional to the ratio change
+      const prevWr = _prevWr.get(p.id) ?? wr;
+      if (wr > prevWr && prevWr < 1) {
+        p.troops *= (1 - wr) / (1 - prevWr);
       }
+      _prevWr.set(p.id, wr);
       p.troops = Math.min(p.troops, p.maxTroops);
       const pop = p.troops, mx = p.maxTroops || 1;
       const r = Math.max(pop / mx, 0.001);
