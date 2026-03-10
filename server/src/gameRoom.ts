@@ -361,8 +361,7 @@ export class GameRoom {
             winnerName: p.name,
             winnerTerritoryPct: p.territory / totalClaimed * 100
           });
-          this.stopGame();
-          return;
+          break;
         }
       }
     }

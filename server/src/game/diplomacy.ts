@@ -2,6 +2,16 @@ import type { GameState } from './state';
 
 export function getConflictKey(a: number, b: number) { return a < b ? `${a}-${b}` : `${b}-${a}`; }
 
+function cancelTargetedWaves(gs: GameState, a: number, b: number) {
+  gs.wav = gs.wav.filter(w => {
+    if ((w.pi === a && w.targetOwner === b) || (w.pi === b && w.targetOwner === a)) {
+      if (gs.P[w.pi]?.alive) gs.P[w.pi].troops += w.troops;
+      return false;
+    }
+    return true;
+  });
+}
+
 export function addConflict(gs: GameState, loser: number, winner: number, tiles: number) {
   const k = getConflictKey(loser, winner);
   gs.conflictIntensity.set(k, Math.min(100, (gs.conflictIntensity.get(k) || 0) + tiles * 3));
@@ -50,6 +60,7 @@ export function proposePeace(gs: GameState, from: number, to: number) {
       const k2 = from < to ? `${from}-${to}` : `${to}-${from}`;
       gs.dip.set(k2, 'peace');
       gs.conflictIntensity.set(k, 0);
+      cancelTargetedWaves(gs, from, to);
       gs.addNotif(from, `${toP.name} accepted — united against a common enemy! 🕊`, '#2ECC71');
       gs.pendingPeace = gs.pendingPeace.filter(p => !(p.from === from && p.to === to));
       return;
@@ -71,6 +82,7 @@ export function proposePeace(gs: GameState, from: number, to: number) {
       const k2 = from < to ? `${from}-${to}` : `${to}-${from}`;
       gs.dip.set(k2, 'peace');
       gs.conflictIntensity.set(k, 0);
+      cancelTargetedWaves(gs, from, to);
       gs.addNotif(from, `${toP.name} accepted peace! 🕊`, '#2ECC71');
     } else {
       gs.addNotif(from, `${toP.name} rejected your peace proposal ⚔`, '#E74C3C');
@@ -93,4 +105,5 @@ export function sD(gs: GameState, a: number, b: number, s: string, skipPropose =
     gs.addNotif(a, 'You broke a peace treaty! -30% defense for 2 min ⚠', '#E67E22');
   }
   gs.dip.set(k, s);
+  if (s === 'peace') cancelTargetedWaves(gs, a, b);
 }

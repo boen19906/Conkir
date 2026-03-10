@@ -1,7 +1,7 @@
 import type { GameState } from './state';
 import { C } from './constants';
 import { B, I } from './mapgen';
-import { addConflict } from './diplomacy';
+import { addConflict, gD } from './diplomacy';
 import type { NukeType } from './types';
 
 export function doNuke(gs: GameState, pi: number, nukeType: NukeType, targetX: number, targetY: number) {
@@ -23,7 +23,7 @@ export function procMissiles(gs: GameState) {
     let samIntercepted = false;
     for (const b of gs.bld) {
       if (b.type !== 'sam') continue;
-      if (b.ow === m.pi) continue;
+      if (b.ow === m.pi || gD(gs, b.ow, m.pi) === 'peace') continue;
       if ((b.samCd || 0) > 0) { b.samCd!--; continue; }
       if (Math.hypot(b.x - m.x, b.y - m.y) < C.samRange) {
         b.samCd = C.samCooldown;
