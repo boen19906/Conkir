@@ -277,7 +277,7 @@ export class GameRoom {
     // Add bots after humans (use names pre-generated in startGame to match client's P array)
     const baseIndex = this.slots.length;
     const botSpawnPool = allSpawns.filter(sp =>
-      usedSpots.every(u => Math.hypot(u.x - sp.x, u.y - sp.y) > 80)
+      usedSpots.every(u => Math.hypot(u.x - sp.x, u.y - sp.y) > 45)
     );
 
     for (let i = 0; i < this.botCount && i < botSpawnPool.length; i++) {

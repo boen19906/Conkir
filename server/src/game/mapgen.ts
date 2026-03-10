@@ -76,12 +76,12 @@ export function genMap(gs: GameState, s: number) {
 
 export function findSp(gs: GameState, cnt: number, s: number) {
   const r = new RNG(s + 999), p: Array<{ x: number; y: number }> = [];
-  const md = Math.max(35, Math.min(W, H) * .15 / Math.max(1, cnt / 8)), mg = 40;
+  const md = Math.max(20, Math.min(W, H) * .15 / Math.max(1, cnt / 8)), mg = 40;
   const ca: Array<{ x: number; y: number }> = [];
   for (let y = mg; y < H - mg; y += 5) for (let x = mg; x < W - mg; x += 5) if (isL(gs, x, y)) {
     let l = 0, t = 0;
     for (let dy = -10; dy <= 10; dy += 3) for (let dx = -10; dx <= 10; dx += 3) { t++; if (isL(gs, x + dx, y + dy)) l++; }
-    if (l / t > .6) ca.push({ x, y });
+    if (l / t > .5) ca.push({ x, y });
   }
   for (let i = ca.length - 1; i > 0; i--) {
     const j = r.n() * i | 0;
