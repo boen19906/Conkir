@@ -138,7 +138,7 @@ export function spShip(gs: GameState, pi: number, clickWx: number, clickWy: numb
   return true;
 }
 
-export function navInv(gs: GameState, pi: number, tx: number, ty: number) {
+export function navInv(gs: GameState, pi: number, tx: number, ty: number, tgPi?: number) {
   const p = gs.P[pi]; if (!p || !p.alive) return;
   let bx = -1, by = 0, bd2 = 1e9;
   for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) {
@@ -174,7 +174,7 @@ export function navInv(gs: GameState, pi: number, tx: number, ty: number) {
   if (path === null) { gs.addNotif(pi, 'Naval invasion: no water route to target! 🚢', '#E74C3C'); return; }
   const tr = p.troops * gs.getAtkRatio(pi); if (tr < 10) return;
   p.troops -= tr;
-  gs.unt.push({ id: gs.nextUid(), ty: 't', ow: pi, x: spawnX, y: spawnY!, tx: navX, ty2: navY!, hp: 1, tr, stuck: 0, path });
+  gs.unt.push({ id: gs.nextUid(), ty: 't', ow: pi, x: spawnX, y: spawnY!, tx: navX, ty2: navY!, hp: 1, tr, stuck: 0, path, tgPi });
 }
 
 export function needsNaval(gs: GameState, pi: number, tx: number, ty: number) {

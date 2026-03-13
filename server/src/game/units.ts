@@ -40,7 +40,7 @@ export function updUnits(gs: GameState) {
           const nx = (s.x + dx) | 0, ny = (s.y + dy) | 0;
           if (isL(gs, nx, ny) && gs.own[I(nx, ny)] !== s.ow) { lx = nx; ly = ny; break; }
         }
-        if (lx >= 0) { gs.own[I(lx, ly)] = s.ow; mkWave(gs, s.ow, lx, ly, s.tr || 100, null); }
+        if (lx >= 0) { gs.own[I(lx, ly)] = s.ow; mkWave(gs, s.ow, lx, ly, s.tr || 100, s.tgPi ?? null); }
         s.hp = 0; continue;
       }
       if (!s.path || s.path.length === 0) {

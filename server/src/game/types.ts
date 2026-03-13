@@ -59,6 +59,7 @@ export interface Unit {
   dist?: number;
   safe?: boolean;
   tid?: number;
+  tgPi?: number;  // naval transport: target enemy player index for the landing wave
 }
 
 export interface Bullet {

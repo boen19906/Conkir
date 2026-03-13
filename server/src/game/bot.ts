@@ -138,6 +138,7 @@ export class Bot implements IBot {
           // Send a stronger wave to capitalize on the beachhead
           const beachheadTr = Math.min(available * Math.min(sendRatio * 1.5, 0.6), available);
           mkWave(gs, this.pi, t.x, t.y, beachheadTr, enemyPi);
+          this.navTarget!.tk = gs.tk; // reset window so follow-up continues as long as we border them
           return;
         }
       } else {
@@ -354,11 +355,12 @@ export class Bot implements IBot {
     // Pick best candidate (highest score = weakest/preferred enemy)
     candidates.sort((a, b) => b.score - a.score);
     const best = candidates[0];
-    navInv(gs, this.pi, best.x, best.y);
+    const tgPi = best.pi >= 0 ? best.pi : undefined;
+    navInv(gs, this.pi, best.x, best.y, tgPi);
 
     // Track this as our active naval target for follow-up land attacks
-    if (best.pi >= 0) {
-      this.navTarget = { pi: best.pi, tk: gs.tk };
+    if (tgPi !== undefined) {
+      this.navTarget = { pi: tgPi, tk: gs.tk };
     }
   }
 }
